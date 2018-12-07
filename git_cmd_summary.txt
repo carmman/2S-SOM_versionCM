@@ -51,19 +51,20 @@ git config --global --unset user.emal
 #
 # et autres exemples d'utilisation de la librerie 2S-SOM.
 # ----------------------------------------------------------------------------
-# Ce repository se compose du code developpe par Khalil Yala au Locean mais
-# l'on a extrait dans ce respsotiry ce qui me semble etre le strict minimum
-# necessaire.  Je n'inclus pas la SOM toolbox par exemple.  Je n'inclus non
-# plus, avant de savoir ce que cela represente, d'autres repertoires de code
-# comme :
+# Ce repository se compose du code developpe par Khalil Yala au Locean.  On a
+# extrait dans ce repository uniquement ce qui me semble etre le strict
+# minimum necessaire.  Je n'inclus pas la SOM toolbox par exemple.  Je
+# n'inclus non plus, avant de savoir ce que cela represente, d'autres
+# repertoires de code a l'origine inclus dans les dossiers de Khalil, comme :
 #
 #  - ConsensensClustering/
 #  - Fct_Matlab/
 #  - NCEstimation/
 #  - code_divers/
+#  - dezip
 # et autres ...
 #
-# Tous ces dossiers se trouvent dans le repertoire Extras/ non inclus dans le
+# Tous ces dossiers se trouvent dans le repertoire Extras/ non inclu dans le
 # repository.
 
 # ... le répertoire de travail en cours :
@@ -171,16 +172,16 @@ git commit -am "Fonction principale modifiee et renommee: learn_2s_som.m"
 #
 # ==> Associer le répertoire a ce repository:
 
-cd .../PourCarlos2_pour_Article
+cd ~/Labo/NN_divers/Devel/2S-SOM/
 
 # Creation du README.md
-echo "# chapcar_upwellsom_art" >> README.md
+echo "# 2S-SOM_versionCM" >> README.md
 git add README.md
 
 # commit
-git commit -am "Version fontionnelle. Main dans ctLoopMain.py. Premier export sur GITHUB, repository 'chapcar_upwellsom_art'"
+git commit -am "Premier export sur GITHUB, repository '2S-SOM_versionCM'"
 
-git remote add origin https://github.com/carmman/chapcar_upwellsom_art
+git remote add origin https://github.com/carmman/2S-SOM_versionCM
 git push -u origin master
 
 # ...
