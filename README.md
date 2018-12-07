@@ -14,5 +14,5 @@ repertoires de code a l'origine inclus dans les dossiers de Khalil, comme :
  - dezip
 et autres ...
 
-Tous ces dossiers se trouvent dans le repertoire `Extras/` non inclus dans le
+Tous ces dossiers se trouvent dans le repertoire `Extras/` non inclu dans le
 repository.
