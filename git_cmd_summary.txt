@@ -107,19 +107,17 @@ git add Code-2S-SOM git_cmd_summary.txt
 # commit:
 
 # PREMIER COMMIT
-git commit -m "Code de Charles envoye sous le nom PourCarlos2 du 12/06/2018"
+git commit -m "Code de Khalil Yala de  base pour 2S-SOM du 12/04/2018"
 
 
 # Fichiers provenant de Windows, je converti les fin de ligne des
 # fichiers texte au monde unix ...
-cd code/
-dos2unix *.py
-dos2unix triedpy/*.py
-dos2unix triedpy/archives/*.py
-dos2unix triedpy/*.txt
-
+# (utiliser dos2unix sur une station linux.)
+# Sur Icare:
+   cd Code-2S-SOM/2s_som
+   ~/bin/convtext -unix *.m
 # DEUXIEME COMMIT (fichiers texte convertis a unix ...)
-git commit -am "Conversion dos2unix de tout *.py et *.txt"
+git commit -am "Conversion dos2unix de tout *.m"
 
 
 # ----------------------------------------------------------------------------
