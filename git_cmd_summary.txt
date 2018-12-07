@@ -1,0 +1,224 @@
+# ----------------------------------------------------------------------------
+# Gérer son code avec Git et GitHub
+#
+# Version pour projet ...... PourCarlos2_pour_Article
+# repository GitHub ........ chapcar_upwellsom
+#
+# mini tutoriel:
+#   http://www.inspyration.org/tutoriels/mini-tutoriel-sur-git
+#
+#--------1---------2---------3---------4---------5---------6---------7--------
+#23456789012345678901234567890123456789012345678901234567890123456789012345678
+
+# ############################################################################
+# Installaion et Configuration de git  (A NE FAIRE QU'UNE FOIS !)
+# ############################################################################
+# Installer git ...
+#
+# ----------------------------------------------------------------------------
+# Configurer git:
+# Utiliser la commande:
+#
+#   git config --global VARIABLE  VALEUR
+# 
+# par exemple :
+#
+git config --global  user.name  Carlos Mejia
+#
+git config --global  user.email  Carlos.Mejia@locean-ipsl.upmc.fr
+#
+# Pour lister les variables:
+#
+git config --global --list
+#
+# Pour effacer une variable :
+# p.ex, si l'on s'est trompé et mis  'user.emal' à la place de 
+# 'user.email' alors, pour l'effacer:
+#
+git config --global --unset user.emal
+#
+# ############################################################################
+
+# ----------------------------------------------------------------------------
+# Création d'un repository 2S-SOM ...
+# ----------------------------------------------------------------------------
+# Les sources se trouvent dans le reseau au Locean au repertoires :
+#
+#  /net/argos/data/parvati/yklod/2S-SOM/ ....... librairie de fonctions
+#
+#  /net/nestor/usr/home/yklod/Desktop/dezip/ ... contient learn_som.m
+#     (ou ~yklod/Desktop/dezip/)
+#
+# et autres exemples d'utilisation de la librerie 2S-SOM.
+# ----------------------------------------------------------------------------
+# Ce repository se compose du code developpe par Khalil Yala au Locean mais
+# l'on a extrait dans ce respsotiry ce qui me semble etre le strict minimum
+# necessaire.  Je n'inclus pas la SOM toolbox par exemple.  Je n'inclus non
+# plus, avant de savoir ce que cela represente, d'autres repertoires de code
+# comme :
+#
+#  - ConsensensClustering/
+#  - Fct_Matlab/
+#  - NCEstimation/
+#  - code_divers/
+# et autres ...
+#
+# Tous ces dossiers se trouvent dans le repertoire Extras/ non inclus dans le
+# repository.
+
+# ... le répertoire de travail en cours :
+#
+# cd ~/Labo/NN_divers/Devel/2S-SOM
+
+git init
+
+# voir status ...
+
+git status
+
+# ----------------------------------------------------------------------------
+# Gestion des exceptions (il faut d'abord creer le repository):
+#
+# Apres avoir initialisé git dans le répertoire (voir création d'un
+# repository, ci-dessous), éditer le fichier ".git/info/exclude" et
+# ajouter les noms ou expressions régulières des fichiers ou
+# répertoires a ne pas tenir en compte.
+#
+# vi .git/info/exclude
+#
+# Décommenter la ligne avec '*~' et ajouter les autres lignes, l'idee
+# étant de n'inclure dans le repository que les fichiers de code :
+# *~
+# .#*
+# # #######################################
+# # Repertoires a exclure des soumissions:
+# Extras
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+# Ajouter des fichiers (PREMIER ADD) plus le fichier git_cmd_summary.txt, 
+# fichier de rappel de commandes git executes pour ce cas.
+
+git add Code-2S-SOM git_cmd_summary.txt
+
+# ----------------------------------------------------------------------------
+# Commiter les additions ... 
+# il faut toujours ajouter un message identifiant le pourquoi du
+# commit:
+
+# PREMIER COMMIT
+git commit -m "Code de Charles envoye sous le nom PourCarlos2 du 12/06/2018"
+
+
+# Fichiers provenant de Windows, je converti les fin de ligne des
+# fichiers texte au monde unix ...
+cd code/
+dos2unix *.py
+dos2unix triedpy/*.py
+dos2unix triedpy/archives/*.py
+dos2unix triedpy/*.txt
+
+# DEUXIEME COMMIT (fichiers texte convertis a unix ...)
+git commit -am "Conversion dos2unix de tout *.py et *.txt"
+
+
+# ----------------------------------------------------------------------------
+# Pour se positionner dans une branche, c-a-d: revenir sur une version
+# alternative ou precedente du code.
+#
+# Faire d'abord git log pour connaitre les multiples commits, ou etats
+# intermediaires où revenir ...
+#
+# Puis, ici, si l'on veut revenir par exemple a l'etat initial, apres
+# l'adaptation de la version de Charles aux chemins de données locaux
+# faire :
+
+git checkout 54ac88636a6647f1618f0e697bf877fa71c2db92
+
+
+# Revenir au dernier commit de la branche principale:
+
+git checkout master
+
+
+# Modificatione pour rendre pure fonctions le contenu de ctLoopAnyS.py
+# afin de pouvoir realiser des experiences avec un simple appels a une
+# procedure, prise en compte d'arguments externes dans ctLoopMain.py.
+#
+# Creation de nouveux fichiers python remplacant ctLoopAnyS.py :
+#   ctLoopMain.py
+#   ctLoopTools.py
+# plus models_def_tb.py avec description des modeles (tableau) issu de ctObsMdldef.py
+
+# Ajout des nouveaux fichiers
+git add ctLoopMain.py ctLoopTools.py models_def_tb.py
+
+# commit
+git commit -am "Traveaux de rendre fontionnel toutes les actions dans ctLoopAnyS.py. Version preliminaire non fonctionnelle"
+
+# commit
+git commit -am "Traveaux de rendre fontionnel toutes les actions dans ctLoopAnyS.py. Ok jusqu'au traitement des Modeles - Il manque l'commit"
+
+# ...
+
+
+# AFC
+git commit -am "Travaux pour rendre fontionnel les actions dans ctLoopAnyS.py. AFC Ok"
+
+
+# Corriger le commentaire d'un commmit (pas exactement une correction
+# mais un nouvel commit pointant sur le precedent):
+git revert HEAD
+# Un editeur est lance pour permettre la correction.
+# Un nouveau commit sera créé, ce commit contiendra les modifications
+# inverses de HEAD.
+
+
+# ----------------------------------------------------------------------------
+# Pour déclarer un serveur avec un repository distant ou mon
+# repository local sera "pushed", c-a-d, ou je vais copier mon
+# répertoire local:
+#
+#   git remote add origin <remote repository URL>
+# Sets the new remote
+#
+#   git remote -v
+# Verifies the new remote URL
+#
+# Exemple:
+# 1) Le répertoire .../PourCarlos2_pour_Article/  contient un suivi
+#    avec git.
+# 2) Dans github.com j'ai cree le repository chapcar_upwellsom_art
+#    sans README !
+#
+# ==> Associer le répertoire a ce repository:
+
+cd .../PourCarlos2_pour_Article
+
+# Creation du README.md
+echo "# chapcar_upwellsom_art" >> README.md
+git add README.md
+
+# commit
+git commit -am "Version fontionnelle. Main dans ctLoopMain.py. Premier export sur GITHUB, repository 'chapcar_upwellsom_art'"
+
+git remote add origin https://github.com/carmman/chapcar_upwellsom_art
+git push -u origin master
+
+# ...
+git push
+
+# Pour sauver le mot de passe github et qu'il ne soit pas demande a
+# chaque fois.
+# ----------------------------------------------------------------------------
+# Tell Git to use osxkeychain helper using the global
+# credential.helper config:
+git config --global credential.helper osxkeychain
+# Set git to use the osxkeychain credential helper
+#
+# The next time you clone an HTTPS URL that requires a password,
+# you'll be prompted for your username and password, and to grant
+# access to the OSX keychain. After you've done this, the username and
+# password are stored in your keychain and you won't be required to
+# type them in to Git again.
+
