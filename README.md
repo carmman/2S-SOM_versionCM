@@ -11,7 +11,7 @@ repertoires de code a l'origine inclus dans les dossiers de Khalil, comme :
  - Fct_Matlab/
  - NCEstimation/
  - code_divers/
- - dezip
+ - dezip/
 et autres ...
 
 Tous ces dossiers se trouvent dans le repertoire `Extras/` non inclu dans le
