@@ -61,7 +61,7 @@ git config --global --unset user.emal
 #  - Fct_Matlab/
 #  - NCEstimation/
 #  - code_divers/
-#  - dezip
+#  - dezip/
 # et autres ...
 #
 # Tous ces dossiers se trouvent dans le repertoire Extras/ non inclu dans le
