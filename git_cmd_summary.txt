@@ -148,6 +148,9 @@ git checkout master
 cd Code-2S-SOM/
 git mv learn_som_carlos.m learn_2s_som.m
 
+# COMMIT (fichiers modifiest er renommes ...)
+git commit -am "Fonction principale modifiee et renommee: learn_2s_som.m"
+
 
 # ----------------------------------------------------------------------------
 # Pour déclarer un serveur avec un repository distant ou mon
