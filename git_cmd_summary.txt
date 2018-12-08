@@ -91,7 +91,8 @@ git status
 # étant de n'inclure dans le repository que les fichiers de code :
 # *~
 # .#*
-# # #######################################
+# .DS_Store
+# # ##################################################
 # # Repertoires a exclure des soumissions:
 # Extras
 # ----------------------------------------------------------------------------
