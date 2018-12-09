@@ -1,4 +1,4 @@
-function [sMap sMap_denorm Result] = learn_som_carlos(A,nb_neurone,varargin)
+function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
 % Cree la carte SOM ou S2-SOM Pour donnees cachees
 %
 % En entree obligatoire
@@ -71,6 +71,22 @@ function [sMap sMap_denorm Result] = learn_som_carlos(A,nb_neurone,varargin)
   
   data_casename='simulation';
   
+  % --- CM pour ajouter les arguments 'data_name' et 'comp_names'
+  i=1;
+  while (i<=length(varargin))
+    if ischar(varargin{i})
+      switch varargin{i},
+        case { 'data_name' },
+          data_casename = varargin{i+1};
+          i=i+1;
+        case { 'comp_names' },
+          data.colheaders = varargin{i+1};
+          i=i+1;
+      end
+    end
+    i=i+1;
+  end
+  
   sD = som_data_struct(data.data,'name', data_casename,'comp_names', upper(ListVar));
   i=1;
   while (i<=length(varargin) && bool_norm==0)
@@ -110,6 +126,12 @@ function [sMap sMap_denorm Result] = learn_som_carlos(A,nb_neurone,varargin)
       i=i+1;
     end
   end
+
+  fprintf(1,[ '\n-- ------------------------------------------------------------------\n', ...
+              '-- New 2S-SOMTraining function:\n', ...
+              '--   %s (''%s'', ''%s'', ''%s'', ... )\n', ...
+              '-- ------------------------------------------------------------------\n' ], ...
+          mfilename, init, lattice, data_casename);
 
   %SOM initialisation
   if init_with_make
