@@ -1,10 +1,14 @@
 # ----------------------------------------------------------------------------
 # Gérer son code avec Git et GitHub
 #
-# Version pour projet ...... PourCarlos2_pour_Article
-# repository GitHub ........ chapcar_upwellsom
+# Version pour projet ...... Developements autour de 2S-SOM a partir du code
+#                            de Khalil Yala
 #
-# mini tutoriel:
+# Repertoire principal ..... ~/Labo/NN_divers/Devel/2S-SOM/
+#
+# repository GitHub ........ 2S-SOM_versionCM
+#
+# mini tutoriel Git:
 #   http://www.inspyration.org/tutoriels/mini-tutoriel-sur-git
 #
 #--------1---------2---------3---------4---------5---------6---------7--------
