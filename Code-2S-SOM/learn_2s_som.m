@@ -64,7 +64,7 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
   Result         = [];
   
   bool_init_with_make = true;
-  bool_pre_train      = true;
+  bool_pre_training   = true;
   
   %recuperer les donnees
   data.data=A;
@@ -130,10 +130,10 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
           bool_init_with_make = true;
         case 'no-ini-with-make'
           bool_init_with_make = false;
-        case 'pre-train'
-          bool_pre_train      = true;
-        case 'no-pre-train'
-          bool_pre_train      = false;
+        case 'pre-training'
+          bool_pre_training   = true;
+        case 'no-pre-training'
+          bool_pre_training   = false;
         otherwise
           error(sprintf(' *** %s error: argument(%d) ''%s'' inconnu ***\n', ...
                         mfilename, i, varargin{i}));
@@ -249,7 +249,7 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
   %     end
   %   end
 
-  if bool_pre_train
+  if bool_pre_training
     tracking_ini = tracking;
     %tracking_ini = 1;
     
@@ -299,7 +299,7 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
     fprintf(1,'--> som_distortion apres entrainement initiale = %s\n', num2str(current_perf));
     
   else
-    fprintf(1,'** batchtrain initial (pre-train) non active **\n')
+    fprintf(1,'** batchtrain initial (pre-training) non active **\n')
   end
   % end
   
