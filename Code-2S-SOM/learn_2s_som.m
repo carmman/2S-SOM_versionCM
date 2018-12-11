@@ -47,13 +47,21 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
 % Detailed explanation goes here
   
   
-% Valeurts par defaut
-  tracking  = 0;
-  init      = 'lininit';
-  lattice   = 'rect';
-  bool_norm = 0;
+% Valeurs par defaut
+  tracking       = 0;
+  init           = 'lininit';
+  lattice        = 'rect';
   
-  Result    = [];
+  bool_verbose   = 0;
+  bool_norm      = 0;
+  bool_rad       = 0;
+  bool_trainlen  = 0;
+  bool_2ssom     = 0;
+  bool_DimData   = 0;
+  bool_lambda    = 0;
+  bool_eta       = 0;
+
+  Result         = [];
   
   init_with_make = 1;
   pre_train      = 1;
@@ -76,26 +84,68 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
   while (i<=length(varargin))
     if ischar(varargin{i})
       switch varargin{i},
+        case { 'verbose', '-verbose' },
+          bool_verbose = 1;
         case { 'data_name' },
-          data_casename = varargin{i+1};
-          i=i+1;
+          data_casename = varargin{i+1}; i=i+1;
         case { 'comp_names' },
-          data.colheaders = varargin{i+1};
-          i=i+1;
+          data.colheaders = varargin{i+1}; i=i+1;
+        case { 'norm' },
+          bool_norm = 1; 
+          type_norm = varargin{i+1}; i=i+1;
+        case { 'init' },
+          init = varargin{i+1}; i=i+1;
+        case { 'tracking' },
+          tracking = varargin{i+1}; i=i+1;
+        case { 'lattice' },
+          lattice = varargin{i+1}; i=i+1;
+        case 'radius'
+          bool_rad = 1;
+          rad = varargin{i+1}; i=i+1;
+        case 'trainlen' 
+          bool_trainlen = 1;
+          trlen = varargin{i+1}; i=i+1;
+        case 'S2-SOM'
+          disp('** S2-SOM Active **');
+          bool_2ssom = 1;
+        case 'DimData'
+          DimData = varargin{i+1}; i=i+1;
+          for di=1:length(DimData)
+            DimBloc(di).Dim = DimData(di);
+          end
+          bool_DimData = 1;
+        case 'lambda' 
+          lambda=varargin{i+1}; i=i+1;
+          if length(lambda) < 1
+            error('lambda est de longueur nulle !  Il doit y avoir au moins une valeur')
+          end
+          bool_lambda = 1;
+        case 'eta' 
+          eta = varargin{i+1}; i=i+1;
+          if length(eta) < 1
+            error('eta est de longueur nulle !  Il doit y avoir au moins une valeur')
+          end
+          bool_eta = 1;
+        otherwise
+          error(sprintf(' *** %s error: argument(%d) ''%s'' inconnu ***\n', ...
+                        mfilename, i, varargin{i}));
       end
+    else
+      error(sprintf(' *** %s error: argument non-string inattendu (en %d-iemme position) ***\n', ...
+                    mfilename, i));
     end
     i=i+1;
   end
   
   sD = som_data_struct(data.data,'name', data_casename,'comp_names', upper(ListVar));
-  i=1;
-  while (i<=length(varargin) && bool_norm==0)
-    if strcmp(varargin{i},'norm')
-      bool_norm=1; 
-      type_norm=varargin{i+1};
-    end
-    i=i+1;
-  end
+  % i=1;
+  % while (i<=length(varargin) && bool_norm==0)
+  %   if strcmp(varargin{i},'norm')
+  %     bool_norm=1; 
+  %     type_norm=varargin{i+1};
+  %   end
+  %   i=i+1;
+  % end
   
   %normalisation des donnees
   if bool_norm
@@ -111,21 +161,21 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
   end
   
   
-  if ~isempty(varargin)
-    i=1;
-    while i<=length(varargin)
-      if strcmp(varargin{i},'init')
-        init=varargin{i+1};
-      end
-      if strcmp(varargin{i},'tracking')
-        tracking=varargin{i+1};
-      end
-      if strcmp(varargin{i},'lattice')
-        lattice=varargin{i+1};
-      end
-      i=i+1;
-    end
-  end
+  % if ~isempty(varargin)
+  %   i=1;
+  %   while i<=length(varargin)
+  %     if strcmp(varargin{i},'init')
+  %       init=varargin{i+1};
+  %     end
+  %     if strcmp(varargin{i},'tracking')
+  %       tracking=varargin{i+1};
+  %     end
+  %     if strcmp(varargin{i},'lattice')
+  %       lattice=varargin{i+1};
+  %     end
+  %     i=i+1;
+  %   end
+  % end
 
   fprintf(1,[ '\n-- ------------------------------------------------------------------\n', ...
               '-- New 2S-SOMTraining function:\n', ...
@@ -165,193 +215,189 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
     fprintf(1,' <som init END>.\n')
   end
   
-  bool_rad=0;
-  bool_trainlen=0;
-  if ~isempty(varargin)
+  % bool_rad=0;
+  % bool_trainlen=0;
+  % if ~isempty(varargin)
+  % 
+  %   i=1;
+  %   while i<=length(varargin)
+  %     if ischar(varargin{i})
+  %       switch varargin{i}
+  %         case 'radius'
+  %           bool_rad=1;
+  %           loc_rad=i;
+  %           rad=varargin{loc_rad+1};
+  %           i=i+1;
+  %         case 'trainlen' 
+  %           bool_trainlen=1;
+  %           loc_trainlen=i;
+  %           trlen=varargin{loc_trainlen+1};
+  %           i=i+1;
+  %         otherwise
+  %           i=i+1;
+  %       end
+  %     else
+  %       i=i+1;
+  %     end
+  %   end
+
+  if pre_train
+    tracking_ini = tracking;
+    %tracking_ini = 1;
     
-    i=1;
-    while i<=length(varargin)
-      if ischar(varargin{i})
-        switch varargin{i}
-          case 'radius'
-            bool_rad=1;
-            loc_rad=i;
-            rad=varargin{loc_rad+1};
-            i=i+1;
-          case 'trainlen' 
-            bool_trainlen=1;
-            loc_trainlen=i;
-            trlen=varargin{loc_trainlen+1};
-            i=i+1;
-          otherwise
-            i=i+1;
-        end
-      else
-        i=i+1;
+    % batchtrain avec radius ...
+    if (bool_rad && ~bool_trainlen)
+      fprintf(1,'\n-- BATCHTRAIN initial avec radius ... ')
+      if tracking_ini, fprintf(1,'\n'); end
+      j=1;
+      while j<length(rad)
+        
+        sMap=som_batchtrain(sMap,sD_norm.data,'radius',[rad(j) rad(j+1)],'tracking',tracking_ini);
+        j=j+1;
+        
       end
     end
-
-    if pre_train
-      tracking_ini = tracking;
-      %tracking_ini = 1;
-      
-      % batchtrain avec radius ...
-      if (bool_rad && ~bool_trainlen)
-        fprintf(1,'\n-- BATCHTRAIN initial avec radius ... ')
-        if tracking_ini, fprintf(1,'\n'); end
-        %rad=varargin{loc_rad+1};
+    % batchtrain avec trainlen ...
+    if (~bool_rad && bool_trainlen) 
+      fprintf(1,'\n-- BATCHTRAIN initial avec trainlen ... ')
+      if tracking_ini, fprintf(1,'\n'); end
+      j=1;
+      while j<=length(trlen)
+        
+        sMap=som_batchtrain(sMap,sD_norm.data,'trainlen',trlen(j),'tracking',tracking_ini);
+        j=j+1;
+        
+      end
+    end
+    % batchtrain avec radius et trainlen             
+    if (bool_rad && bool_trainlen) 
+      fprintf(1,'\n-- BATCHTRAIN initial avec radius et trainlen ... \n')
+      if tracking_ini, fprintf(1,'\n'); end
+      if length(rad)==length(trlen)+1
+        
         j=1;
         while j<length(rad)
           
-          sMap=som_batchtrain(sMap,sD_norm.data,'radius',[rad(j) rad(j+1)],'tracking',tracking_ini);
+          sMap=som_batchtrain(sMap,sD_norm.data,'radius',[rad(j) rad(j+1)],'trainlen',trlen(j),'tracking',tracking_ini);
           j=j+1;
           
         end
+      else
+        error('vecteur radius doit avoir un element en plus que le vecteur trainlen ')
       end
-      % batchtrain avec trainlen ...
-      if (~bool_rad && bool_trainlen) 
-        fprintf(1,'\n-- BATCHTRAIN initial avec trainlen ... ')
-        if tracking_ini, fprintf(1,'\n'); end
-        %trlen=varargin{loc_trainlen+1};
-        j=1;
-        while j<=length(trlen)
+    end
+    
+    current_perf = som_distortion(sMap,sD_norm);
+    fprintf(1,'--> som_distortion apres entrainement initiale = %s\n', num2str(current_perf));
+    
+  else
+    fprintf(1,'** batchtrain initial non active **\n')
+  end
+  % end
+  
+  % %S2-SOM
+  % bool_2ssom=0;
+  % bool_DimData=0;
+  % bool_lambda=0;
+  % bool_eta=0;
+  %
+  % if ~isempty(varargin)
+  %   i=1;
+  %   while i<=length(varargin)
+  %     if ischar(varargin{i}) 
+  %       switch varargin{i} 
+  %      
+  %         case 'S2-SOM'
+  %           disp('** S2-SOM Active **');
+  %           bool_2ssom=1;
+  %           i=i+1;
+  %           %mettre en bloc
+  %         case 'DimData'
+  %           i=i+1;
+  %           DimData=varargin{i};
+  %           for di=1:length(DimData)
+  %             DimBloc(di).Dim=DimData(di);
+  %           end
+  %           bool_DimData=1;
+  %         case 'lambda' 
+  %           i=i+1; 
+  %           lambda=varargin{i};
+  %           if length(lambda) < 1
+  %             error('lambda est de longueur nulle !  Il doit y avoir au moins une valeur')
+  %           end
+  %           bool_lambda=1;
+  %         case 'eta' 
+  %           i=i+1; eta=varargin{i};
+  %           if length(eta) < 1
+  %             error('eta est de longueur nulle !  Il doit y avoir au moins une valeur')
+  %           end
+  %           bool_eta=1;
+  %         otherwise
+  %           i=i+1;
+  %
+  %       end
+  %     else
+  %       i=i+1;
+  %     end
+  %   end
+  
+  if (bool_2ssom)
+    if(bool_lambda && bool_eta && bool_DimData)
+      
+      best_i   = 0;
+      best_j   = 0;
+      bestperf = inf;
+      
+      i_train = 1;
+      n_train = length(lambda)*length(eta);
+      for i=1:length(lambda)
+        for j=1:length(eta)
+          fprintf(1,'\n-- batchtrainRTOM (%d/%d) with lambda=%s and eta=%s ... ',i_train, ...
+                  n_train, num2str(lambda(i)),num2str(eta(j)));
+          if tracking, fprintf(1,'\n'); end
           
-          sMap=som_batchtrain(sMap,sD_norm.data,'trainlen',trlen(j),'tracking',tracking_ini);
-          j=j+1;
+          [Result(i,j).sMap Result(i,j).bmus Result(i,j).Alpha Result(i,j).Beta] = som_batchtrainRTOM( ...
+              sMap, sD_norm, ...
+              'TypeAlgo','2SSOM', ...
+              'DimData',DimData, ...
+              'DimBloc',DimBloc, ...
+              'lambda', lambda(i), ...
+              'eta',eta(j), ...
+              'radius',[rad(round(length(rad)/2)) ...
+                        rad((round(length(rad)/2))+1)], ...
+              'trainlen',trlen(round(length(trlen)/2)), ...
+              'tracking',tracking);
           
-        end
-      end
-      % batchtrain avec radius et trainlen             
-      if (bool_rad && bool_trainlen) 
-        fprintf(1,'\n-- BATCHTRAIN initial avec radius et trainlen ... \n')
-        if tracking_ini, fprintf(1,'\n'); end
-        %rad=varargin{loc_rad+1};
-        %trlen=varargin{loc_trainlen+1};
-        if length(rad)==length(trlen)+1
-          
-          j=1;
-          while j<length(rad)
-            
-            sMap=som_batchtrain(sMap,sD_norm.data,'radius',[rad(j) rad(j+1)],'trainlen',trlen(j),'tracking',tracking_ini);
-            j=j+1;
-            
+          current_perf = som_distortion(Result(i,j).sMap,sD_norm);
+          fprintf(1,'   --> som_distortion=%s\n', num2str(current_perf));
+          %  end
+          %end
+          % best_i=0;
+          % best_j=0;
+          % bestperf=inf;
+          % for i=1:length(lambda)
+          %   for j=1:length(eta)
+          %         
+          Result(i,j).Perf = current_perf;
+          if Result(i,j).Perf < bestperf
+            best_i = i;
+            best_j = j;
           end
-        else
-          error('vecteur radius doit avoir un element en plus que le vecteur trainlen ')
+          
+          i_train = i_train + 1;
         end
       end
       
-      current_perf = som_distortion(sMap,sD_norm);
-      fprintf(1,'--> som_distortion apres entrainement initiale = %s\n', num2str(current_perf));
+      sMap = Result(best_i,best_j).sMap;
       
     else
-      fprintf(1,'** batchtrain initial non active **\n')
+      error('manque de parametre')
     end
+  elseif (bool_lambda || bool_eta || bool_DimData)
+    error('mentionnez si vous voulez S2-SOM')
   end
   
-  %S2-SOM
-  bool_2ssom=0;
-  bool_DimData=0;
-  bool_lambda=0;
-  bool_eta=0;
-  
-  if ~isempty(varargin)
-    i=1;
-    while i<=length(varargin)
-      if ischar(varargin{i}) 
-        switch varargin{i} 
-          
-          case 'S2-SOM'
-            disp('** S2-SOM Active **');
-            bool_2ssom=1;
-            i=i+1;
-            %mettre en bloc
-          case 'DimData'
-            i=i+1;
-            DimData=varargin{i};
-            for di=1:length(DimData)
-              DimBloc(di).Dim=DimData(di);
-            end
-            bool_DimData=1;
-          case 'lambda' 
-            i=i+1; 
-            lambda=varargin{i};
-            if length(lambda) < 1
-              error('lambda est de longueur nulle !  Il doit y avoir au moins une valeur')
-            end
-            bool_lambda=1;
-          case 'eta' 
-            i=i+1; eta=varargin{i};
-            if length(eta) < 1
-              error('eta est de longueur nulle !  Il doit y avoir au moins une valeur')
-            end
-            bool_eta=1;
-          otherwise
-            i=i+1;
-            
-        end
-      else
-        i=i+1;
-      end
-    end
-    
-    if (bool_2ssom)
-      if(bool_lambda && bool_eta && bool_DimData)
-        
-        best_i   = 0;
-        best_j   = 0;
-        bestperf = inf;
-
-        i_train = 1;
-        n_train = length(lambda)*length(eta);
-        for i=1:length(lambda)
-          for j=1:length(eta)
-            fprintf(1,'\n-- batchtrainRTOM (%d/%d) with lambda=%s and eta=%s ... ',i_train, ...
-                    n_train, num2str(lambda(i)),num2str(eta(j)));
-            if tracking, fprintf(1,'\n'); end
-
-            [Result(i,j).sMap Result(i,j).bmus Result(i,j).Alpha Result(i,j).Beta] = som_batchtrainRTOM( ...
-                sMap, sD_norm, ...
-                'TypeAlgo','2SSOM', ...
-                'DimData',DimData, ...
-                'DimBloc',DimBloc, ...
-                'lambda', lambda(i), ...
-                'eta',eta(j), ...
-                'radius',[rad(round(length(rad)/2)) ...
-                          rad((round(length(rad)/2))+1)], ...
-                'trainlen',trlen(round(length(trlen)/2)), ...
-                'tracking',tracking);
-
-            current_perf = som_distortion(Result(i,j).sMap,sD_norm);
-            fprintf(1,'   --> som_distortion=%s\n', num2str(current_perf));
-            %  end
-            %end
-            % best_i=0;
-            % best_j=0;
-            % bestperf=inf;
-            % for i=1:length(lambda)
-            %   for j=1:length(eta)
-            %         
-            Result(i,j).Perf = current_perf;
-            if Result(i,j).Perf < bestperf
-              best_i = i;
-              best_j = j;
-            end
-
-            i_train = i_train + 1;
-          end
-        end
-        
-        sMap = Result(best_i,best_j).sMap;
-        
-      else
-        error('manque de parametre')
-      end
-    elseif (bool_lambda || bool_eta || bool_DimData)
-      error('mentionnez si vous voulez S2-SOM')
-    end
-    
-  end
+  % end
   
   % denormalisation de la Map
   if bool_norm
