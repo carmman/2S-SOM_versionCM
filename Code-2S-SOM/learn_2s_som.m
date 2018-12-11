@@ -136,7 +136,7 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
     end
     i=i+1;
   end
-  
+
   sD = som_data_struct(data.data,'name', data_casename,'comp_names', upper(ListVar));
   % i=1;
   % while (i<=length(varargin) && bool_norm==0)
@@ -156,7 +156,7 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
       sD_norm=som_normalize(sD,type_norm);
     end
   else           
-    fprintf(1,'\n-- Pas de normalisation des donnees ...\n');
+    fprintf(1,'\n** Pas de normalisation des donnees **\n');
     sD_norm = sD;
   end
   
@@ -270,7 +270,7 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
       end
     end
     % batchtrain avec radius et trainlen             
-    if (bool_rad && bool_trainlen) 
+    if (bool_rad && bool_trainlen)
       fprintf(1,'\n-- BATCHTRAIN initial avec radius et trainlen ... \n')
       if tracking_ini, fprintf(1,'\n'); end
       if length(rad)==length(trlen)+1
@@ -342,7 +342,7 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
   %   end
   
   if (bool_2ssom)
-    if(bool_lambda && bool_eta && bool_DimData)
+    if (bool_lambda && bool_eta && bool_DimData)
       
       best_i   = 0;
       best_j   = 0;
@@ -350,9 +350,12 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
       
       i_train = 1;
       n_train = length(lambda)*length(eta);
+      fprintf(1,[ '\n-- batchtrainRTOM loop for %d lambda and %d eta values:\n', ... 
+                  '-- ------------------------------------------------------------------\n' ], ...
+              length(lambda), length(eta));
       for i=1:length(lambda)
         for j=1:length(eta)
-          fprintf(1,'\n-- batchtrainRTOM (%d/%d) with lambda=%s and eta=%s ... ',i_train, ...
+          fprintf(1,'-- batchtrainRTOM (%d/%d) with lambda=%s and eta=%s ... ',i_train, ...
                   n_train, num2str(lambda(i)),num2str(eta(j)));
           if tracking, fprintf(1,'\n'); end
           

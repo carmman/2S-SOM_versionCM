@@ -455,7 +455,9 @@ for t = 1:trainlen,
    case 'cutgauss', H = exp(-Ud/(2*radius(t))) .* (Ud<=radius(t));
    case 'ep',       H = (1-Ud/radius(t)) .* (Ud<=radius(t));
   end  
-  disp(radius(t))
+  if tracking > 0,
+    disp(sprintf('radius(%d)=%s',t,num2str(radiuss(1))))
+  end
   % update 
 
   % In principle the updating step goes like this: replace each map unit 

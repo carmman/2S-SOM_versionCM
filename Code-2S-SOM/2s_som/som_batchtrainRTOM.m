@@ -584,7 +584,7 @@ radius(find(radius==0)) = eps;
                             case 'numeric', [ BlocData(i).M ] = UpdateNumericOM( H,P,BlocData(i).D,BlocData(i).Known, BlocData(i).M);
                                 PoidsBeta(i).SB(1).beta=repmat(ones(1,BlocData(i).Dim(1))./DimData(i),blen,1);
                                 PoidsAlpha(i).SB(1).alpha=repmat(ones(1,BlocData(i).Dim(1))./size(DimData,2),blen,1);
-                                disp('numeric')
+                                %disp('numeric')
                             case 'mixed1',
                                 %disp(i)
                                 PoidsBeta(i).SB(1).beta=repmat(ones(1,BlocData(i).Dim(1))./DimData(i),blen,1);
