@@ -52,14 +52,14 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
   init           = 'lininit';
   lattice        = 'rect';
   
-  bool_verbose   = 0;
-  bool_norm      = 0;
-  bool_rad       = 0;
-  bool_trainlen  = 0;
-  bool_2ssom     = 0;
-  bool_DimData   = 0;
-  bool_lambda    = 0;
-  bool_eta       = 0;
+  bool_verbose   = false;
+  bool_norm      = false;
+  bool_rad       = false;
+  bool_trainlen  = false;
+  bool_2ssom     = false;
+  bool_DimData   = false;
+  bool_lambda    = false;
+  bool_eta       = false;
 
   Result         = [];
   
@@ -85,13 +85,13 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
     if ischar(varargin{i})
       switch varargin{i},
         case { 'verbose', '-verbose' },
-          bool_verbose = 1;
+          bool_verbose = true;
         case { 'data_name' },
           data_casename = varargin{i+1}; i=i+1;
         case { 'comp_names' },
           data.colheaders = varargin{i+1}; i=i+1;
         case { 'norm' },
-          bool_norm = 1; 
+          bool_norm = true; 
           type_norm = varargin{i+1}; i=i+1;
         case { 'init' },
           init = varargin{i+1}; i=i+1;
@@ -100,32 +100,32 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
         case { 'lattice' },
           lattice = varargin{i+1}; i=i+1;
         case 'radius'
-          bool_rad = 1;
+          bool_rad = true;
           rad = varargin{i+1}; i=i+1;
         case 'trainlen' 
-          bool_trainlen = 1;
+          bool_trainlen = true;
           trlen = varargin{i+1}; i=i+1;
         case 'S2-SOM'
           disp('** S2-SOM Active **');
-          bool_2ssom = 1;
+          bool_2ssom = true;
         case 'DimData'
           DimData = varargin{i+1}; i=i+1;
           for di=1:length(DimData)
             DimBloc(di).Dim = DimData(di);
           end
-          bool_DimData = 1;
+          bool_DimData = true;
         case 'lambda' 
           lambda=varargin{i+1}; i=i+1;
           if length(lambda) < 1
             error('lambda est de longueur nulle !  Il doit y avoir au moins une valeur')
           end
-          bool_lambda = 1;
+          bool_lambda = true;
         case 'eta' 
           eta = varargin{i+1}; i=i+1;
           if length(eta) < 1
             error('eta est de longueur nulle !  Il doit y avoir au moins une valeur')
           end
-          bool_eta = 1;
+          bool_eta = true;
         otherwise
           error(sprintf(' *** %s error: argument(%d) ''%s'' inconnu ***\n', ...
                         mfilename, i, varargin{i}));
