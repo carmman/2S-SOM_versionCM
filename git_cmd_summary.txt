@@ -206,3 +206,20 @@ git config --global credential.helper osxkeychain
 # password are stored in your keychain and you won't be required to
 # type them in to Git again.
 
+
+
+# J'ai regroupe le code d'extraction des variables depuis VARARGIN
+# danslearn_2s_som.m mais les resultats ne semblent pas tout a fait a
+# avant les modifications. J'ai fais un commit pout garder les
+# modifications et puis je reviens a l'etat precedent pour tester.
+
+# commit de l'etat actuel avec dernieres modifications ...
+git commit -am "Regroupement des extractions des variables depuis VARARGIN dans Code-2S-SOM/learn_2s_som.m"
+
+
+# execution de git log pour connaitre le numero du log precedent ...
+git log
+
+# retour a l'estade anterieur ...
+git checkout 9334adeaf273c2058f74958db66abe126613ff43
+
