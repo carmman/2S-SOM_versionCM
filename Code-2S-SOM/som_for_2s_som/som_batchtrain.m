@@ -455,8 +455,8 @@ for t = 1:trainlen,
    case 'cutgauss', H = exp(-Ud/(2*radius(t))) .* (Ud<=radius(t));
    case 'ep',       H = (1-Ud/radius(t)) .* (Ud<=radius(t));
   end  
-  if tracking > 0,
-    disp(sprintf('radius(%d)=%s',t,num2str(radiuss(1))))
+  if tracking > 1,
+    disp(sprintf(' radius(%d)=%s',t,num2str(radius(t))))
   end
   % update 
 

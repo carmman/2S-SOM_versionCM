@@ -536,7 +536,12 @@ radius(find(radius==0)) = eps;
          H=diag(ones(1,blen));
      
          %% Apprentissage
+         if tracking>1,
+           fprintf(1,' ... tlen=%s with %d radius values varying between %s and %s\n', ...
+                   num2str(trainlen),length(radius),num2str(radius(1)),num2str(radius(end)));
+         end
          for t = 1:trainlen,
+           if tracking>1, fprintf(1,' ... rad=%s           ',num2str(radius(t))); end
              % t=1 initialisation
              if t==1,
                  %% Affectation des observations aux cellules
@@ -766,7 +771,7 @@ function [] = trackplot(M,D,tracking,start,n,qe)
   l = length(qe);
   elap_t = etime(clock,start); 
   tot_t = elap_t*l/n;
-  fprintf(1,'\rTraining: %3.0f/ %3.0f s',elap_t,tot_t)  
+  fprintf(1,'\r Training: %3.0f/ %3.0f s',elap_t,tot_t)  
   switch tracking
    case 1, 
    case 2,   
