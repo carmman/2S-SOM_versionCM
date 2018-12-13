@@ -417,7 +417,9 @@ blen = min(munits,dlen);
 
 % reserve some space
 bmus = zeros(1,dlen); 
-ddists = zeros(1,dlen); 
+ddists = zeros(1,dlen);
+
+if tracking>1, sTrain, end
 
 for t = 1:trainlen,  
 

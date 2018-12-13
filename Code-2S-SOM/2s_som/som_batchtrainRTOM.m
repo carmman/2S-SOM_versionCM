@@ -537,7 +537,7 @@ radius(find(radius==0)) = eps;
      
          %% Apprentissage
          if tracking>1,
-           fprintf(1,' ... tlen=%s with %d radius values varying between %s and %s\n', ...
+           fprintf(1,' ... tlen=%s with %d radius values varying from %s to %s\n', ...
                    num2str(trainlen),length(radius),num2str(radius(1)),num2str(radius(end)));
          end
          for t = 1:trainlen,

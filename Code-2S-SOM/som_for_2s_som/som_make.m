@@ -302,7 +302,7 @@ else
    case 'long',  sTrain.trainlen = sTrain.trainlen*4;
   end
 end
-if tracking>1, fprintf(1,' ... trainlen=%d iterations.\n',sTrain.trainlen); end
+if tracking>1, fprintf(1,' ... trainlen=%d iterations.\n',sTrain.trainlen); sTrain, end
 sTrain.neigh=neigh;  %OM
 switch func,
  case 'seq',    sMap = som_seqtrain(sMap,D,sTrain,'tracking',tracking,'mask',mask);
