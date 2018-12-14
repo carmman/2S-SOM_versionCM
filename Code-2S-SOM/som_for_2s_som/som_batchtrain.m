@@ -419,7 +419,11 @@ blen = min(munits,dlen);
 bmus = zeros(1,dlen); 
 ddists = zeros(1,dlen);
 
-if tracking>1, sTrain, end
+if tracking>1,
+  fprintf(1,' %s : tlen=%d with %d radius values varying from %s to %s\n', ...
+          upper(mfilename), trainlen, length(radius), num2str(radius(1)), num2str(radius(end)));
+  sTrain
+end
 
 for t = 1:trainlen,  
 
