@@ -54,13 +54,13 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
     
   % flags et variables associees
   bool_verbose      = false;
-  bool_norm         = false; type_norm     = 'simple'
+  bool_norm         = false; type_norm     = 'simple';
   bool_rad          = false; rad           = [5 1];
   bool_trainlen     = false; trlen         = 20;
   bool_rad_2s_som   = false; rad_2s_som    = [];
   bool_trlen_2s_som = false; trlen_2s_som  = [];
   bool_2ssom        = false;
-  bool_DimData      = false; DimBloc       = [];
+  bool_DimData      = false; DimData       = [size(A,2)];
   bool_lambda       = false; lambda        = 1;
   bool_eta          = false; eta           = 1000;
 
@@ -73,12 +73,8 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
   data.data=A;
   label=[1:size(data.data,2)];
   
-  %Labelise les donnees
+  %Labelise les donnees (affectation apres boucle d'arguments (selon la valeur de DimBloc)
   ListVar={};
-  for l=1:length(label)
-    ListVar{l}=char(strcat('v ',int2str(label(l))));
-  end
-  data.colheaders=ListVar;
   
   data_casename='simulation';
   
@@ -92,7 +88,7 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
         case { 'data_name' },
           data_casename = varargin{i+1}; i=i+1;
         case { 'comp_names' },
-          data.colheaders = varargin{i+1}; i=i+1;
+          ListVar = varargin{i+1}; i=i+1;
         case { 'norm' },
           bool_norm = true; 
           type_norm = varargin{i+1}; i=i+1;
@@ -153,6 +149,19 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
     end
     i=i+1;
   end
+  
+  if isempty(ListVar),
+    kVar = 1;
+    for iG = 1:length(DimData),
+      szG = DimData(iG);
+      for l = 1:szG
+        ListVar{kVar,1} = sprintf('Gr%dVar%d', iG, l);
+        kVar = kVar + 1;
+      end
+    end
+  end
+
+  data.colheaders = ListVar;
 
   sD = som_data_struct(data.data,'name', data_casename,'comp_names', upper(ListVar));
   % i=1;
@@ -172,7 +181,7 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
     else
       sD_norm=som_normalize(sD,type_norm);
     end
-  else           
+  else
     fprintf(1,'\n** Pas de normalisation des donnees **\n');
     sD_norm = sD;
   end
@@ -203,7 +212,7 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
   %SOM initialisation
   if bool_init_with_make
     fprintf(1,'\n-- Initialisation avec SOM_MAKE ... ')
-    sMap=som_make(sD_norm.data, ...
+    sMap=som_make(sD_norm, ...
                   'munits',   nb_neurone, ...
                   'lattice',  lattice, ...
                   'init',     init, ...
@@ -212,14 +221,14 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
   else
     if strcmp(init,'randinit')
       fprintf(1,'\n-- Initialisation avec SOM_RANDINIT ... ')
-      sMap=som_randinit(sD_norm.data, ...
+      sMap=som_randinit(sD_norm, ...
                         'munits',   nb_neurone, ...
                         'lattice',  lattice, ...
                         'tracking', tracking); % creer la carte initiale
 
     elseif strcmp(init,'lininit')
       fprintf(1,'\n-- Initialisation avec SOM_LININIT ... ')
-      sMap=som_lininit(sD_norm.data, ...
+      sMap=som_lininit(sD_norm, ...
                        'munits',   nb_neurone, ...
                        'lattice',  lattice, ...
                        'tracking', tracking); % creer la carte initiale
@@ -269,7 +278,7 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
       j=1;
       while j<length(rad)
         
-        sMap=som_batchtrain(sMap, sD_norm.data, ...
+        sMap=som_batchtrain(sMap, sD_norm, ...
                             'radius',[rad(j) rad(j+1)], ...
                             'tracking',pretrain_tracking);
         j=j+1;
@@ -283,7 +292,7 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
       j=1;
       while j<=length(trlen)
         
-        sMap=som_batchtrain(sMap, sD_norm.data, ...
+        sMap=som_batchtrain(sMap, sD_norm, ...
                             'trainlen',trlen(j), ...
                             'tracking',pretrain_tracking);
         j=j+1;
@@ -299,7 +308,7 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
         j=1;
         while j<length(rad)
           
-          sMap=som_batchtrain(sMap, sD_norm.data, ...
+          sMap=som_batchtrain(sMap, sD_norm, ...
                               'radius',[rad(j) rad(j+1)], ...
                               'trainlen',trlen(j), ...
                               'tracking',pretrain_tracking);
