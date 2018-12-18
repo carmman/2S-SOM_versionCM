@@ -51,17 +51,20 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
   tracking       = 0;
   init           = 'lininit';
   lattice        = 'rect';
-  
-  bool_verbose   = false;
-  bool_norm      = false;
-  bool_rad       = false;
-  bool_trainlen  = false;
-  bool_2ssom     = false;
-  bool_DimData   = false;
-  bool_lambda    = false;
-  bool_eta       = false;
+    
+  % flags et variables associees
+  bool_verbose      = false;
+  bool_norm         = false; type_norm     = 'simple'
+  bool_rad          = false; rad           = [5 1];
+  bool_trainlen     = false; trlen         = 20;
+  bool_rad_2s_som   = false; rad_2s_som    = [];
+  bool_trlen_2s_som = false; trlen_2s_som  = [];
+  bool_2ssom        = false;
+  bool_DimData      = false; DimBloc       = [];
+  bool_lambda       = false; lambda        = 1;
+  bool_eta          = false; eta           = 1000;
 
-  Result         = [];
+  Result            = [];
   
   bool_init_with_make = true;
   bool_pre_training   = true;
@@ -105,6 +108,12 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
         case 'trainlen' 
           bool_trainlen = true;
           trlen = varargin{i+1}; i=i+1;
+        case 'radius-2s-som'
+          bool_rad_2s_som = true;
+          rad_2s_som = varargin{i+1}; i=i+1;
+        case 'trainlen-2s-som' 
+          bool_trlen_2s_som = true;
+          trlen_2s_som = varargin{i+1}; i=i+1;
         case 'S2-SOM'
           disp('** S2-SOM Active **');
           bool_2ssom = true;
@@ -366,16 +375,20 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
       i_train = 1;
       n_train = length(lambda)*length(eta);
       
-      radius_2s_som =  [rad(round(length(rad)/2)) ...
-                        rad((round(length(rad)/2))+1)];
-      trainlen_2s_som = trlen(round(length(trlen)/2));
+      if ~bool_rad_2s_som
+        rad_2s_som =  [rad(round(length(rad)/2)) ...
+                          rad((round(length(rad)/2))+1)];
+      end
+      if ~bool_trlen_2s_som
+        trlen_2s_som = trlen(round(length(trlen)/2));
+      end
 
       fprintf(1,[ '\n-- batchtrainRTOM loop for %d lambda and %d eta values:\n', ... 
                   '-- ------------------------------------------------------------------\n' ], ...
               length(lambda), length(eta));
       if tracking > 1,
-        fprintf(1,'   ... trainlen_2s_som ... %s\n', num2str(trainlen_2s_som))
-        fprintf(1,'   ... radius_2s_som ..... [%s]\n', join(string(radius_2s_som),', '))
+        fprintf(1,'   ... trainlen_2s_som ... %s\n', num2str(trlen_2s_som))
+        fprintf(1,'   ... radius_2s_som ..... [%s]\n', join(string(rad_2s_som),', '))
       end
       for i=1:length(lambda)
         for j=1:length(eta)
@@ -390,8 +403,8 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
               'DimBloc',DimBloc, ...
               'lambda', lambda(i), ...
               'eta',eta(j), ...
-              'radius',radius_2s_som, ...
-              'trainlen',trainlen_2s_som, ...
+              'radius',rad_2s_som, ...
+              'trainlen',trlen_2s_som, ...
               'tracking',tracking);
           
           current_perf = som_distortion(Result(i,j).sMap,sD_norm);
