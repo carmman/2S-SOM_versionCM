@@ -1,12 +1,21 @@
-function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
+function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,varargin)
 % Cree la carte SOM ou S2-SOM Pour donnees cachees
+%
+% Usage:
+%
+%    [sMap, sMap_denorm, Result, sMapPT] = learn_2s_som(A, nb_neurone, <OPTIOS>)
+%
+%    St = learn_2s_som(A,nb_neurone, '-struct', <OPTIOS>)
 %
 % En entree obligatoire
 %
 %   A: les donnees cachees
 %   nb_neurone: Nombre de neurones 
 %
-% En option
+% En option, elles sont specifies par couples de valeurs, p. exemple:
+%
+%         'radius', [ 5 1 ], 'trainlen', 20, 'tracking', 1, ...
+%  
 %
 %   radius: en forme de vecteur, chaque deux elements qui ce suivent constitue
 %           une temperature [i..i+1],[i+1..i+2],....
@@ -26,9 +35,11 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
 %
 % En sortie
 %
-%   sMap: La carte SOM ou S2-SOM.
+%   sMap: La carte SOM ou S2-SOM au point de meilleur "Perf".
 %
 %   sMap_denorm: La carte SOM ou S2-SOM, denormalisee.
+%
+%   iBest = indice dans Result de la carte sMap retournee.
 %
 %   Result: structure (vecteur) avec les sorties ou resultats de chaque cas
 %           entraine (avec une paire distincte de la combinaison entre lambda
@@ -53,18 +64,19 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
   lattice        = 'rect';
     
   % flags et variables associees
-  bool_verbose      = false;
-  bool_norm         = false; type_norm     = 'simple';
-  bool_rad          = false; rad           = [5 1];
-  bool_trainlen     = false; trlen         = 20;
-  bool_rad_2s_som   = false; rad_2s_som    = [];
-  bool_trlen_2s_som = false; trlen_2s_som  = [];
-  bool_2ssom        = false;
-  bool_DimData      = false; DimData       = [size(A,2)];
-  bool_lambda       = false; lambda        = 1;
-  bool_eta          = false; eta           = 1000;
+  bool_verbose        = false;
+  bool_return_struct  = false;
+  bool_norm           = false; type_norm     = 'simple';
+  bool_rad            = false; rad           = [5 1];
+  bool_trainlen       = false; trlen         = 20;
+  bool_rad_2s_som     = false; rad_2s_som    = [];
+  bool_trlen_2s_som   = false; trlen_2s_som  = [];
+  bool_2ssom          = false;
+  bool_DimData        =  false; DimData       = [size(A,2)];
+  bool_lambda         = false; lambda        = 1;
+  bool_eta            = false; eta           = 1000;
 
-  Result            = [];
+  Result              = [];
   
   bool_init_with_make = true;
   bool_pre_training   = true;
@@ -85,6 +97,8 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
       switch varargin{i},
         case { 'verbose', '-verbose' },
           bool_verbose = true;
+        case { 'returnstruct', 'return-struct', 'struct', '-return-struct', '-struct' },
+          bool_return_struct = true;
         case { 'data_name' },
           data_casename = varargin{i+1}; i=i+1;
         case { 'comp_names' },
@@ -208,7 +222,7 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
               '--   %s (''%s'', ''%s'', ''%s'', ... )\n', ...
               '-- ------------------------------------------------------------------\n' ], ...
           mfilename, init, lattice, data_casename);
-
+    
   %SOM initialisation
   if bool_init_with_make
     fprintf(1,'\n-- Initialisation avec SOM_MAKE ... ')
@@ -319,7 +333,8 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
         error('vecteur radius doit avoir un element en plus que le vecteur trainlen ')
       end
     end
-    
+    sMapPT = sMap;
+
     current_perf = som_distortion(sMap,sD_norm);
     fprintf(1,'--> som_distortion apres entrainement initiale = %s\n', num2str(current_perf));
     
@@ -447,11 +462,52 @@ function [sMap sMap_denorm Result] = learn_2s_som(A,nb_neurone,varargin)
   
   % end
   
+  clear St
+  if (bool_2ssom)
+    % si 2S-SOM alors best perf sMap
+    [BestPerf,iBest] = min(cell2mat({Result.Perf}));
+    
+    sMap = Result(iBest).sMap;
+  else
+    % sinon, si pas 2S-SOM
+    sMap = sMapPT;
+  end
+  
   % denormalisation de la Map
   if bool_norm
-    sMap_denorm=som_denormalize(sMap,sD_norm.comp_norm);
+    sMap_dnrm = som_denormalize(sMap,sD_norm.comp_norm);
   else
-    sMap_denorm=sMap;
+    sMap_dnrm = sMap;
+  end
+  
+  if bool_return_struct
+    % Si retour STRUCT
+    St.sMap     = sMap;
+    if bool_norm
+      St.sMap_denorm = sMap_dnrm;
+    end
+    
+    if (bool_2ssom)
+      St.bmus   = Result(iBest).bmus;
+      St.Alpha  = Result(iBest).Alpha;
+      St.Beta   = Result(iBest).Beta;
+      
+      St.sMapPT   = sMapPT;
+      if bool_norm
+        St.sMapPT_denorm = som_denormalize(sMapPT,sD_norm.comp_norm);
+      end
+      
+      St.Result   = Result;
+      St.iBest    = iBest;
+    end
+    
+    StsMap = St; % variable de retour
+  else
+    % Sinon, alors retour variables  ... (sMap sMap_denorm Result)
+    StsMap      = sMap;
+    sMap_denorm = sMap_dnrm;
+    Resultout   = Result;
+    sMapPTout   = sMapPT;
   end
   
   return
