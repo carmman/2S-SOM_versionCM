@@ -94,7 +94,7 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
   i=1;
   while (i<=length(varargin))
     if ischar(varargin{i})
-      switch varargin{i},
+      switch lower(varargin{i}),
         case { 'verbose', '-verbose' },
           bool_verbose = true;
         case { 'returnstruct', 'return-struct', 'struct', '-return-struct', '-struct' },
@@ -124,10 +124,13 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
         case 'trainlen-2s-som' 
           bool_trlen_2s_som = true;
           trlen_2s_som = varargin{i+1}; i=i+1;
-        case 'S2-SOM'
+        case 's2-som'
           disp('** S2-SOM Active **');
           bool_2ssom = true;
-        case 'DimData'
+        case 'no-s2-som'
+          disp('** S2-SOM Inactive, only SOM training **');
+          bool_2ssom = false;
+        case 'dimdata'
           DimData = varargin{i+1}; i=i+1;
           for di=1:length(DimData)
             DimBloc(di).Dim = DimData(di);
