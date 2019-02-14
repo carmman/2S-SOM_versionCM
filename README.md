@@ -1,6 +1,6 @@
 # 2S-SOM_versionCM
 
-This repository has Matlab code developed by Khalil Yala at Locean (Sorbonne Universites, Paris). This code needs the SOM Toolbox (see https://github.com/ilarinieminen/SOM-Toolbox, maybe the most recent version of Kohonen code). The directory som_for_2s_som/ contains three functions which are a modified version from the ones from SOM-Toolbox. Use those functions in replacement for the originals !
+This repository has Matlab code developed by Khalil Yala at Locean (Sorbonne Universites, Paris). This code needs the SOM Toolbox (see https://github.com/ilarinieminen/SOM-Toolbox, this is maybe the most recent version of Kohonen code). The directory som_for_2s_som/ contains three functions which are a modified version from the ones from SOM-Toolbox. Use those functions in replacement for the originals !
 
 Notes in french for former developers, not relevant for people looking for use 2S-SOM method.
 
