@@ -489,8 +489,10 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
   if bool_return_struct
     % Si retour STRUCT
     St.sMap     = sMap;
+    St.sD       = sD;
     if bool_norm
       St.sMap_denorm = sMap_dnrm;
+      St.sD_norm = sD_norm;
     end
     
     if (bool_2ssom)
