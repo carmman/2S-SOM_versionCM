@@ -72,11 +72,11 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
   bool_rad_2s_som     = false; rad_2s_som    = [];
   bool_trlen_2s_som   = false; trlen_2s_som  = [];
   bool_2ssom          = false;
-  bool_DimData        =  false; DimData       = [size(A,2)];
+  bool_DimData        = false; DimData       = [size(A,2)];
   bool_lambda         = false; lambda        = 1;
   bool_eta            = false; eta           = 1000;
 
-  Result              = [];
+  Result              = struct([]);
   
   bool_init_with_make = true;
   bool_pre_training   = true;
@@ -124,10 +124,10 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
         case 'trainlen-2s-som' 
           bool_trlen_2s_som = true;
           trlen_2s_som = varargin{i+1}; i=i+1;
-        case 's2-som'
+        case {'s2-som', '2s-som'},
           disp('** S2-SOM Active **');
           bool_2ssom = true;
-        case 'no-s2-som'
+        case {'no-s2-som', 'no-2s-som'},
           disp('** S2-SOM Inactive, only SOM training **');
           bool_2ssom = false;
         case 'dimdata'
@@ -141,13 +141,21 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
           if length(lambda) < 1
             error('lambda est de longueur nulle !  Il doit y avoir au moins une valeur')
           end
-          bool_lambda = true;
+          if isscalar(lambda) && lambda <= 0
+            bool_lambda = false;
+          else
+            bool_lambda = true;
+          end
         case 'eta' 
           eta = varargin{i+1}; i=i+1;
           if length(eta) < 1
             error('eta est de longueur nulle !  Il doit y avoir au moins une valeur')
           end
-          bool_eta = true;
+          if isscalar(eta) && eta <= 0
+            bool_eta = false;
+          else
+            bool_eta = true;
+          end
         case 'ini-with-make'
           bool_init_with_make = true;
         case 'no-ini-with-make'
@@ -166,7 +174,7 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
     end
     i=i+1;
   end
-  
+
   if isempty(ListVar),
     kVar = 1;
     for iG = 1:length(DimData),
@@ -391,9 +399,10 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
   %       i=i+1;
   %     end
   %   end
-  
+
   if (bool_2ssom)
-    if (bool_lambda && bool_eta && bool_DimData)
+    %if (bool_lambda && bool_eta && bool_DimData)
+    if (bool_lambda && bool_eta)
       
       best_i   = 0;
       best_j   = 0;
@@ -462,8 +471,12 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
     else
       error('manque de parametre')
     end
-  elseif (bool_lambda || bool_eta || bool_DimData)
-    error('mentionnez si vous voulez S2-SOM')
+  elseif (bool_lambda || bool_eta)
+    error([ '*** %s: PAS DE 2SSOM SPECIFIE MAIS FLAGS (LAMBDA ou ETA) ACTIVE ***\n', ...
+            '    mentionnez si vous voulez ''S2-SOM''\n' ], mfilename)
+  else
+    fprintf(1,[ '*** %s: PAS DE 2SSOM SPECIFIE ***\n', ...
+                '    mentionnez si vous voulez ''S2-SOM''\n' ], mfilename)
   end
   
   % end
@@ -490,6 +503,11 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
     % Si retour STRUCT
     St.sMap     = sMap;
     St.sD       = sD;
+    
+    if ~bool_2ssom
+      St.bmus = som_bmus(sMap,sD);
+    end
+    
     if bool_norm
       St.sMap_denorm = sMap_dnrm;
       St.sD_norm = sD_norm;
