@@ -443,8 +443,9 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
               'trainlen', trlen_2s_som, ...
               'tracking', tracking);
           
-          Result(i,j).lambda = lambda(i);
-          Result(i,j).eta    = eta(j);
+          Result(i,j).lambda  = lambda(i);
+          Result(i,j).eta     = eta(j);
+          Result(i,j).DimData = DimData;
           
           current_perf = som_distortion(Result(i,j).sMap,sD_norm);
           fprintf(1,'   --> som_distortion=%s\n', num2str(current_perf));
@@ -514,11 +515,12 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
     end
     
     if (bool_2ssom)
-      St.lambda = Result(iBest).lambda;
-      St.eta    = Result(iBest).eta;
-      St.bmus   = Result(iBest).bmus;
-      St.Alpha  = Result(iBest).Alpha;
-      St.Beta   = Result(iBest).Beta;
+      St.lambda  = Result(iBest).lambda;
+      St.eta     = Result(iBest).eta;
+      St.bmus    = Result(iBest).bmus;
+      St.Alpha   = Result(iBest).Alpha;
+      St.Beta    = Result(iBest).Beta;
+      St.DimData = Result(iBest).DimData;
       
       St.sMapPT   = sMapPT;
       if bool_norm
