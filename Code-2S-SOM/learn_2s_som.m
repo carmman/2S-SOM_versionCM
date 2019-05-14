@@ -75,6 +75,7 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
   bool_DimData        = false; DimData       = [size(A,2)];
   bool_lambda         = false; lambda        = 1;
   bool_eta            = false; eta           = 1000;
+  bool_parcomp        = false; parcomp_workers = 8; % 8 workers for parallel computing by default, if activated (if bool_parcomp is true)
 
   Result              = struct([]);
   
@@ -156,6 +157,9 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
           else
             bool_eta = true;
           end
+        case 'parcomp'
+          bool_parcomp = true;
+          parcomp_workers = varargin{i+1}; i=i+1;
         case 'ini-with-make'
           bool_init_with_make = true;
         case 'no-ini-with-make'
@@ -401,77 +405,90 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
   %   end
 
   if (bool_2ssom)
-    %if (bool_lambda && bool_eta && bool_DimData)
-    if (bool_lambda && bool_eta)
-      
-      best_i   = 0;
-      best_j   = 0;
-      bestperf = inf;
-      
-      i_train = 1;
-      n_train = length(lambda)*length(eta);
-      
-      if ~bool_rad_2s_som
-        rad_2s_som =  [rad(round(length(rad)/2)) ...
-                          rad((round(length(rad)/2))+1)];
-      end
-      if ~bool_trlen_2s_som
-        trlen_2s_som = trlen(round(length(trlen)/2));
-      end
-
-      fprintf(1,[ '\n-- batchtrainRTOM loop for %d lambda and %d eta values:\n', ... 
-                  '-- ------------------------------------------------------------------\n' ], ...
-              length(lambda), length(eta));
-      if tracking > 1,
-        fprintf(1,'   ... trainlen_2s_som ... %s\n', num2str(trlen_2s_som))
-        fprintf(1,'   ... radius_2s_som ..... [%s]\n', join(string(rad_2s_som),', '))
-      end
-      for i=1:length(lambda)
-        for j=1:length(eta)
-          fprintf(1,'-- batchtrainRTOM (%d/%d) with lambda=%s and eta=%s ... ',i_train, ...
-                  n_train, num2str(lambda(i)),num2str(eta(j)));
-          if tracking, fprintf(1,'\n'); end
+      %if (bool_lambda && bool_eta && bool_DimData)
+      if (bool_lambda && bool_eta)
           
-          [Result(i,j).sMap Result(i,j).bmus Result(i,j).Alpha Result(i,j).Beta] = som_batchtrainRTOM( ...
-              sMap, sD_norm, ...
-              'TypeAlgo', '2SSOM', ...
-              'DimData',  DimData, ...
-              'DimBloc',  DimBloc, ...
-              'lambda',   lambda(i), ...
-              'eta',      eta(j), ...
-              'radius',   rad_2s_som, ...
-              'trainlen', trlen_2s_som, ...
-              'tracking', tracking);
+          n_lambda = length(lambda);
+          n_eta    = length(eta);
+          i_train = 1;
+          n_train = n_lambda*n_eta;
           
-          Result(i,j).lambda  = lambda(i);
-          Result(i,j).eta     = eta(j);
-          Result(i,j).DimData = DimData;
-          
-          current_perf = som_distortion(Result(i,j).sMap,sD_norm);
-          fprintf(1,'   --> som_distortion=%s\n', num2str(current_perf));
-          %  end
-          %end
-          % best_i=0;
-          % best_j=0;
-          % bestperf=inf;
-          % for i=1:length(lambda)
-          %   for j=1:length(eta)
-          %         
-          Result(i,j).Perf = current_perf;
-          if Result(i,j).Perf < bestperf
-            best_i = i;
-            best_j = j;
+          if ~bool_rad_2s_som
+              rad_2s_som =  [rad(round(length(rad)/2)) ...
+                  rad((round(length(rad)/2))+1)];
+          end
+          if ~bool_trlen_2s_som
+              trlen_2s_som = trlen(round(length(trlen)/2));
           end
           
-          i_train = i_train + 1;
-        end
+          fprintf(1,[ '\n-- batchtrainRTOM loop for %d lambda and %d eta values:\n', ...
+              '-- ------------------------------------------------------------------\n' ], ...
+              n_lambda, n_eta);
+          if tracking > 1,
+              fprintf(1,'   ... trainlen_2s_som ... %s\n', num2str(trlen_2s_som))
+              fprintf(1,'   ... radius_2s_som ..... [%s]\n', join(string(rad_2s_som),', '))
+          end
+          if bool_parcomp, ticBytes(gcp); end   % POUR CALCUL PARALLELE
+          if bool_parcomp
+              parcomp_M = parcomp_workers;
+          else
+              parcomp_M = 1;
+          end
+          parfor (i=1:n_lambda,parcomp_M)
+              for j=1:n_eta
+                  fprintf(1,'-- batchtrainRTOM (%d/%d) with lambda=%s and eta=%s ... ',(i - 1) * n_eta + j, ...
+                      n_train, num2str(lambda(i)),num2str(eta(j)));
+                  if tracking, fprintf(1,'\n'); end
+                  
+                  [Result(i,j).sMap Result(i,j).bmus Result(i,j).Alpha Result(i,j).Beta] = som_batchtrainRTOM( ...
+                      sMap, sD_norm, ...
+                      'TypeAlgo', '2SSOM', ...
+                      'DimData',  DimData, ...
+                      'DimBloc',  DimBloc, ...
+                      'lambda',   lambda(i), ...
+                      'eta',      eta(j), ...
+                      'radius',   rad_2s_som, ...
+                      'trainlen', trlen_2s_som, ...
+                      'tracking', tracking);
+                  
+                  Result(i,j).lambda  = lambda(i);
+                  Result(i,j).eta     = eta(j);
+                  Result(i,j).DimData = DimData;
+                  
+                  current_perf = som_distortion(Result(i,j).sMap,sD_norm);
+                  fprintf(1,'   --> som_distortion=%s\n', num2str(current_perf));
+                  
+                  Result(i,j).Perf = current_perf;
+              end
+          end
+          if bool_parcomp, tocBytes(gcp), end   % POUR CALCUL PARALLELE
+          
+          % best_i   = 0;
+          % best_j   = 0;
+          % bestperf = inf;
+          % for i=1:n_lambda
+          %   for j=1:n_eta
+          %       %  end
+          %       %end
+          %       % best_i=0;
+          %       % best_j=0;
+          %       % bestperf=inf;
+          %       % for i=1:n_lambda
+          %       %   for j=1:n_eta
+          %       %
+          %       if Result(i,j).Perf < bestperf
+          %           best_i = i;
+          %           best_j = j;
+          %           bestperf = Result(i,j).Perf;
+          %       end
+          %   end
+          % end
+          %
+          % sMap = Result(best_i,best_j).sMap;
+          
+      else
+          error('manque de parametre: specifier les valeurs pour LAMBDA, pour ETA ou pour les deux!')
       end
-      
-      sMap = Result(best_i,best_j).sMap;
-      
-    else
-      error('manque de parametre')
-    end
   elseif (bool_lambda || bool_eta)
     error([ '*** %s: PAS DE 2SSOM SPECIFIE MAIS FLAGS (LAMBDA ou ETA) ACTIVE ***\n', ...
             '    mentionnez si vous voulez ''S2-SOM''\n' ], mfilename)
