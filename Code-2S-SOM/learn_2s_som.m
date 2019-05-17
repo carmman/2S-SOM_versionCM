@@ -435,12 +435,14 @@ if (bool_2ssom)
             parcomp_M = 1;
         end
         parfor (i=1:n_lambda,parcomp_M)
-            for j=1:n_eta
+        %for i = 1:n_lambda
+            ResultIJ = struct([]);
+            for j = 1:n_eta
                 fprintf(1,'-- batchtrainRTOM (%d/%d) with lambda=%s and eta=%s ... ',(i - 1) * n_eta + j, ...
                     n_train, num2str(lambda(i)),num2str(eta(j)));
                 if tracking, fprintf(1,'\n'); end
                 
-                [Result(i,j).sMap Result(i,j).bmus Result(i,j).Alpha Result(i,j).Beta] = som_batchtrainRTOM( ...
+                [ResultIJ(1).sMap, ResultIJ(1).bmus, ResultIJ(1).Alpha, ResultIJ(1).Beta] = som_batchtrainRTOM( ...
                     sMap, sD_norm, ...
                     'TypeAlgo', '2SSOM', ...
                     'DimData',  DimData, ...
@@ -451,14 +453,24 @@ if (bool_2ssom)
                     'trainlen', trlen_2s_som, ...
                     'tracking', tracking);
                 
-                Result(i,j).lambda  = lambda(i);
-                Result(i,j).eta     = eta(j);
-                Result(i,j).DimData = DimData;
+                ResultIJ(1).lambda  = lambda(i);
+                ResultIJ(1).eta     = eta(j);
+                ResultIJ(1).DimData = DimData;
                 
-                current_perf = som_distortion(Result(i,j).sMap,sD_norm);
+                current_perf = som_distortion(ResultIJ(1).sMap,sD_norm);
                 fprintf(1,'   --> som_distortion=%s\n', num2str(current_perf));
                 
-                Result(i,j).Perf = current_perf;
+                ResultIJ(1).Perf = current_perf;
+                
+                LoopResult(i,j).fields = fields(ResultIJ);
+                LoopResult(i,j).values = struct2cell(ResultIJ);
+            end
+        end
+        for ij = 1:length(LoopResult)
+            if ij == 1
+                Result = cell2struct(LoopResult(ij).values,LoopResult(ij).fields);
+            else
+                Result(ij) = cell2struct(LoopResult(ij).values,LoopResult(ij).fields);
             end
         end
         if bool_parcomp, tocBytes(gcp), end   % POUR CALCUL PARALLELE
