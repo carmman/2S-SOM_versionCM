@@ -269,6 +269,11 @@ else
     end
     fprintf(1,' <som init END>.\n')
 end
+fprintf(1,'\n   - msize ......... [%s]\n',join(string(sMap.topol.msize),', '));
+fprintf(1,'   - lattice ....... ''%s''\n',sMap.topol.lattice);
+fprintf(1,'-- Training data:\n')
+fprintf(1,'   - radius ........ [%s]\n',join(string(rad),', '));
+fprintf(1,'   - trainlen ...... [%s]\n',join(string(trlen),', '));
 
 % bool_rad=0;
 % bool_trainlen=0;
@@ -420,6 +425,8 @@ if (bool_2ssom)
         if ~bool_trlen_2s_som
             trlen_2s_som = trlen(round(length(trlen)/2));
         end
+        fprintf(1,'   - rad_2s_som .... [%s]\n',join(string(rad_2s_som),', '));
+        fprintf(1,'   - trlen_2s_som .. [%s]\n',join(string(trlen_2s_som),', '));
         
         fprintf(1,[ '\n-- batchtrainRTOM loop for %d lambda and %d eta values:\n', ...
             '-- ------------------------------------------------------------------\n' ], ...
@@ -438,8 +445,11 @@ if (bool_2ssom)
         %for i = 1:n_lambda
             ResultIJ = struct([]);
             for j = 1:n_eta
-                fprintf(1,'-- batchtrainRTOM (%d/%d) with lambda=%s and eta=%s ... ',(i - 1) * n_eta + j, ...
-                    n_train, num2str(lambda(i)),num2str(eta(j)));
+                fprintf(1,[ '-- batchtrainRTOM (%d/%d) %d train iterations', ...
+                    ' [R: %s], with lambda=%s and eta=%s ... ' ], ...
+                    (i - 1) * n_eta + j, n_train, trlen_2s_som, ...
+                    join(string(rad_2s_som),'-'), ...
+                    num2str(lambda(i)), num2str(eta(j)));
                 if tracking, fprintf(1,'\n'); end
                 
                 [ResultIJ(1).sMap, ResultIJ(1).bmus, ResultIJ(1).Alpha, ResultIJ(1).Beta] = som_batchtrainRTOM( ...
