@@ -1,58 +1,133 @@
 function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,varargin)
-% Cree la carte SOM ou S2-SOM Pour donnees cachees
+% Create and train SOM or 2S-SOM map.
 %
 % Usage:
 %
-%    [sMap, sMap_denorm, Result, sMapPT] = learn_2s_som(A, nb_neurone, <OPTIOS>)
+%    [sMap, sMap_denorm, Result, sMapPT] = learn_2s_som(A, nb_neurone, <OPTIONS>)
+% or
+%    St = learn_2s_som(A,nb_neurone, '-struct', <OPTIONS>)
 %
-%    St = learn_2s_som(A,nb_neurone, '-struct', <OPTIOS>)
+% Mandatory input arguments:
 %
-% En entree obligatoire
+%   A, ...
+%             The data. Array. Currently 2D: [nb-patterns x size-of-patterns]
 %
-%   A: les donnees cachees
-%   nb_neurone: Nombre de neurones
-%
-% En option, elles sont specifies par couples de valeurs, p. exemple:
-%
-%         'radius', [ 5 1 ], 'trainlen', 20, 'tracking', 1, ...
+%   nb_neurone, ...
+%             Number of neurons of the MAP. The SOM_MAKE will select the
+%             appropriate 2D grid Map proportion, limited by this total number of
+%             neurons.
 %
 %
-%   radius: en forme de vecteur, chaque deux elements qui ce suivent constitue
-%           une temperature [i..i+1],[i+1..i+2],....
-%   trainlen: en forme de vecteur: chaque element constitue une itération de
-%           l'entraienement. NB:vecteur radius doit avoir un element en plus
-%           que le vecteur trainlen.
-%   tracking: pour visualiser l'apprentissage.
+% Input arguments should be specified by pairs, with the execption of Flag
+% arguments (like 'S2-SOM').
+% 
+% For instance:
 %
-%   'S2-SOM': pour faire l'apprentissage avec S2-SOM. Si 'S2-SOM' est
-%           specifie alors il faut d'autres parametres:
+%    'radius', [ 5 1 ],  'trainlen', 20,  'tracking', 1, 'S2-SOM', 'dimdata', [12, 36], ...
 %
-%   DimData: vecteur contenant la dimention de chaque bloc.
-%   lambda: vecteur, c'est un hyperparametre pour calculer le poids sur les
-%           blocs.
-%   eta: vecteur, c'est un hyperparametre pour calculer le poids sur les
-%           variables.
 %
-% En sortie
+% Arguments d'entrée en option:
 %
-%   sMap: La carte SOM ou S2-SOM au point de meilleur "Perf".
+%    'radius', Value, ...
+%             En forme de vecteur, chaque deux elements qui ce suivent constitue un
+%             pallier de chagements pour la temperature; Ainsi une liste de trois
+%             valeurs [r1, r2, r3] donne deux paliers de changeents [r1 a r2] et [r2 a r3].
 %
-%   sMap_denorm: La carte SOM ou S2-SOM, denormalisee.
+%    'trainlen', Value, ...
+%             En forme de vecteur: chaque element constitue une suite d'itérations
+%             du processus d'entrainement. L'argument de RADIUS doit avoir un element
+%             en plus que celui de TRAINLEN.
 %
-%   iBest = indice dans Result de la carte sMap retournee.
+%    'tracking', Value, ...
+%             Scalar. 0, 1, 2 to visualize training. 0 means no visualitation.
 %
-%   Result: structure (vecteur) avec les sorties ou resultats de chaque cas
-%           entraine (avec une paire distincte de la combinaison entre lambda
-%           et eta): sMap, bmus, Alpha, Beta, Perf.
 %
-%           Champs de Result:
-%              sMap: La carte SOM ou S2-SOM du cas.
-%              bmus: Bmus (best matching units) sur toute la zone.
-%              Alpha: Coefficients Alpha multipliant les groupes.
-%              Beta: Coefficients Alpha multipliant les variables au sans de la
-%                  Carte Topologique.
-%              Perf: parametre "distortion measure for the map", calcule par
-%                  la fonction som_distortion.
+%    'S2-SOM', ...
+%             Flag argument. If present, training with S2-SOM is realized.
+%
+%
+%   If 'S2-SOM' is specified, here are other arguments to specify:
+%
+%    'dimdata', Value, ...
+%             Vector containing 2S-SOM bloc or group dimensions.
+%
+%    'lambda, Value, ...
+%             Scalar or vector. It's an hyperparameter for computing the weight of
+%             blocs, or ALPHA.
+%
+%    'eta', Value, ...
+%             Scalar or vector. It's an hyperparameter for computing the weight of
+%             variables, or BETA.
+%
+%    'radius-2s-som', Value, ...
+%             Two elements vector. To use as radius limits during the the 2S-SOM
+%             training phase.
+%
+%    'trainlen-2s-som', Value, ...
+%             Scalar. To use as trainlen for the the 2S-SOM training phase.
+%
+%
+%   Other input arguments:
+%
+%    'return-struct', ...
+%             Flag argument. If present, the function will return a struct rather
+%             than four individual output variables.
+%
+%    'data-name', Value, ...
+%             String. Name used to nominate SOM data struct.
+%
+%    'comp-names', Value, ...
+%             Cell of strings. Names of each component of data (each column) in SOM
+%             data struct.
+%
+%    'norm', Value, ...
+%             String. If 'norm' is present, a flag is activated to normalize
+%             data. The argument Value is 'simple' by default. See SOM_NORMALIZE
+%             for mor explanations.
+%
+%    'init', Value, ...
+%    'lattice', Value, ...
+%    'tracking', Value, ...
+%             Scalar. see SOM_MAKE for details of those arguments. Defaults are:
+%             'lininit', 'rect', 0, respectively.
+%
+%    'parcomp', Value, ...
+%             Scalar. The value is the number of parcomp workers. 8 by default.
+%
+%             Note: even if 'parcomp' option is not used, LEARN_2S_SOM uses a
+%             PARFOR loop, activating some paralelism. You must enter the code and
+%             comment the parcomp line near line 518:
+%
+%                 parfor (i=1:n_lambda,parcomp_M)
+%
+%             and comment out the next one for a simple and sequential for loop:
+%
+%                 for i = 1:n_lambda
+%
+%             if you want to completely deactivate this parallel behaviour.
+%
+%
+% Output arguments:
+%
+%   sMap:        La carte SOM ou S2-SOM au point de meilleur "Perf".
+%
+%   sMap_denorm: La carte SOM ou S2-SOM au point de meilleur "Perf", denormalisee.
+%
+%   Result:      structure (vecteur) avec les sorties ou resultats de chaque cas
+%                entraine (avec une paire distincte de la combinaison entre lambda
+%                et eta). Champs de Result:
+%
+%                  sMap:    La carte SOM ou S2-SOM du cas.
+%                  bmus:    Bmus (best matching units) sur toute la zone.
+%                  Alpha:   Coefficients Alpha multipliant les groupes.
+%                  Beta:    Coefficients Alpha multipliant les variables au sans de
+%                           la Carte Topologique.
+%                  lambda:  Scalar or array of LAMBDA values (same as input).
+%                  eta:     Scalar or array of ETA values (same as input).
+%                  DimData: Group sizes.
+%                  Perf:    parametre "distortion measure for the map", calcule par
+%                           la fonction som_distortion.
+%
 %
 %   (bmus_pixel:(best matching units) par pixel.)
 % Detailed explanation goes here
@@ -100,9 +175,9 @@ while (i<=length(varargin))
                 bool_verbose = true;
             case { 'returnstruct', 'return-struct', 'struct', '-return-struct', '-struct' },
                 bool_return_struct = true;
-            case { 'data_name' },
+            case { 'data-name', 'data_name' },
                 data_casename = varargin{i+1}; i=i+1;
-            case { 'comp_names' },
+            case { 'comp-names', 'comp_names' },
                 ListVar = varargin{i+1}; i=i+1;
             case { 'norm' },
                 bool_norm = true;
