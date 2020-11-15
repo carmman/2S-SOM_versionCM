@@ -551,7 +551,7 @@ if (bool_2ssom)
                 LoopResult(i,j).values = struct2cell(ResultIJ);
             end
         end
-        for ij = 1:length(LoopResult)
+        for ij = 1:prod(size(LoopResult))
             if ij == 1
                 Result = cell2struct(LoopResult(ij).values,LoopResult(ij).fields);
             else
@@ -655,3 +655,6 @@ else
 end
 
 return
+
+end
+
