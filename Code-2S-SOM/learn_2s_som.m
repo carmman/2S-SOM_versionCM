@@ -1,18 +1,18 @@
-function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,varargin)
+function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurons,varargin)
 % Create and train SOM or 2S-SOM map.
 %
 % Usage:
 %
-%    [sMap, sMap_denorm, Result, sMapPT] = learn_2s_som(A, nb_neurone, <OPTIONS>)
+%    [sMap, sMap_denorm, Result, sMapPT] = learn_2s_som(A, nb_neurons, <OPTIONS>)
 % or
-%    St = learn_2s_som(A,nb_neurone, '-struct', <OPTIONS>)
+%    St = learn_2s_som(A,nb_neurons, '-struct', <OPTIONS>)
 %
 % Mandatory input arguments:
 %
 %   A, ...
 %             The data. Array. Currently 2D: [nb-patterns x size-of-patterns]
 %
-%   nb_neurone, ...
+%   nb_neurons, ...
 %             Number of neurons of the MAP. The SOM_MAKE will select the
 %             appropriate 2D grid Map proportion, limited by this total number of
 %             neurons.
@@ -43,7 +43,11 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurone,va
 %
 %
 %    'S2-SOM', ...
-%             Flag argument. If present, training with S2-SOM is realized.
+%             Flag argument. If present, training with S2-SOM is realized. But it could
+%             also specified with elements like other parameters:
+%
+%    'S2-SOM-exec', Value, ...
+%             Controls the flag if yes or not doing 2S-SOM. Value is true or false.
 %
 %
 %   If 'S2-SOM' is specified, here are other arguments to specify:
@@ -199,13 +203,17 @@ while (i<=length(varargin))
                 rad_2s_som = varargin{i+1}; i=i+1;
             case 'trainlen-2s-som'
                 bool_trlen_2s_som = true;
+                if ~isscalar(varargin{i+1}),
+                    error('unexpected vector ''trainlen-2s-som'' [%s]. Must be a scalar.\nUse ''trainlen'' to specify multiple values', ...
+                        join(string(varargin{i+1}),', '))
+                end
                 trlen_2s_som = varargin{i+1}; i=i+1;
             case {'s2-som', '2s-som'},
-                disp('** S2-SOM Active **');
                 bool_2ssom = true;
             case {'no-s2-som', 'no-2s-som'},
-                disp('** S2-SOM Inactive, only SOM training **');
                 bool_2ssom = false;
+            case 's2-som-exec'
+                bool_2ssom = varargin{i+1}; i=i+1;
             case 'dimdata'
                 DimData = varargin{i+1}; i=i+1;
                 for di=1:length(DimData)
@@ -265,6 +273,14 @@ if isempty(ListVar),
     end
 end
 
+if bool_2ssom
+    if tracking > 1
+        disp('** S2-SOM Active **');
+    end
+else
+    disp('** S2-SOM Inactive, only SOM training **');
+end
+
 data.colheaders = ListVar;
 
 sD = som_data_struct(data.data,'name', data_casename,'comp_names', upper(ListVar));
@@ -279,14 +295,18 @@ sD = som_data_struct(data.data,'name', data_casename,'comp_names', upper(ListVar
 
 %normalisation des donnees
 if bool_norm
-    fprintf(1,'\n-- Normalisation des donnees selon ''%s'' ...\n', type_norm);
+    if tracking > 0,
+        fprintf(1,'\n-- Normalisation des donnees selon ''%s'' ...\n', type_norm);
+    end
     if strcmp(type_norm,'simple')
         sD_norm=som_normalize(sD);
     else
         sD_norm=som_normalize(sD,type_norm);
     end
 else
-    fprintf(1,'\n** Pas de normalisation des donnees **\n');
+    if tracking > 0,
+        fprintf(1,'\n** Pas de normalisation des donnees **\n');
+    end
     sD_norm = sD;
 end
 
@@ -307,33 +327,47 @@ end
 %   end
 % end
 
-fprintf(1,[ '\n-- ------------------------------------------------------------------\n', ...
-    '-- New 2S-SOMTraining function:\n', ...
-    '--   %s (''%s'', ''%s'', ''%s'', ... )\n', ...
-    '-- ------------------------------------------------------------------\n' ], ...
-    mfilename, init, lattice, data_casename);
-
+if tracking > 0,
+    fprintf(1,[ '\n-- ------------------------------------------------------------------\n', ...
+        '-- New 2S-SOMTraining function:\n', ...
+        '--   %s ( ''%s'', ... )\n', ...
+        '-- ------------------------------------------------------------------\n' ], ...
+        mfilename, data_casename);
+end
 %SOM initialisation
 if bool_init_with_make
-    fprintf(1,'\n-- Initialisation avec SOM_MAKE ... ')
+    if tracking > 0,
+        fprintf(1,'\n-- Initialisation avec SOM_MAKE ... ');
+        fprintf(1,'\n   - munits ......... %d\n',nb_neurons);
+        fprintf(1,'   - lattice ....... ''%s''\n',lattice);
+        fprintf(1,'   - init .......... ''%s''\n',init);
+    end
     sMap=som_make(sD_norm, ...
-        'munits',   nb_neurone, ...
+        'munits',   nb_neurons, ...
         'lattice',  lattice, ...
         'init',     init, ...
         'tracking', tracking); % creer la carte initiale avec et effectuer un entrainenemt
     
 else
     if strcmp(init,'randinit')
-        fprintf(1,'\n-- Initialisation avec SOM_RANDINIT ... ')
+        if tracking > 0,
+            fprintf(1,'\n-- Initialisation avec SOM_RANDINIT ... ');
+            fprintf(1,'\n   - munits ......... %d\n',nb_neurons);
+            fprintf(1,'   - lattice ....... ''%s''\n',lattice);
+        end
         sMap=som_randinit(sD_norm, ...
-            'munits',   nb_neurone, ...
+            'munits',   nb_neurons, ...
             'lattice',  lattice, ...
             'tracking', tracking); % creer la carte initiale
         
     elseif strcmp(init,'lininit')
-        fprintf(1,'\n-- Initialisation avec SOM_LININIT ... ')
+        if tracking > 0,
+            fprintf(1,'\n-- Initialisation avec SOM_LININIT ... ');
+            fprintf(1,'\n   - munits ......... %d\n',nb_neurons);
+            fprintf(1,'   - lattice ....... ''%s''\n',lattice);
+        end
         sMap=som_lininit(sD_norm, ...
-            'munits',   nb_neurone, ...
+            'munits',   nb_neurons, ...
             'lattice',  lattice, ...
             'tracking', tracking); % creer la carte initiale
         
@@ -344,12 +378,14 @@ else
     end
     fprintf(1,' <som init END>.\n')
 end
-fprintf(1,'\n   - msize ......... [%s]\n',join(string(sMap.topol.msize),', '));
-fprintf(1,'   - lattice ....... ''%s''\n',sMap.topol.lattice);
-fprintf(1,'-- Training data:\n')
-fprintf(1,'   - radius ........ [%s]\n',join(string(rad),', '));
-fprintf(1,'   - trainlen ...... [%s]\n',join(string(trlen),', '));
-
+if tracking > 0,
+    fprintf(1,'\n-- sMap:\n');
+    fprintf(1,'   - msize ......... [%s]\n',join(string(sMap.topol.msize),', '));
+    fprintf(1,'   - lattice ....... ''%s''\n',sMap.topol.lattice);
+    fprintf(1,'-- Training data:\n')
+    fprintf(1,'   - radius ........ [%s]\n',join(string(rad),', '));
+    fprintf(1,'   - trainlen ...... [%s]\n',join(string(trlen),', '));
+end
 % bool_rad=0;
 % bool_trainlen=0;
 % if ~isempty(varargin)
@@ -382,7 +418,7 @@ if bool_pre_training
     
     % batchtrain avec radius ...
     if (bool_rad && ~bool_trainlen)
-        fprintf(1,'\n-- BATCHTRAIN initial avec radius ... ')
+        if tracking > 0, fprintf(1,'\n-- BATCHTRAIN initial avec radius ... '); end
         if pretrain_tracking, fprintf(1,'\n'); end
         j=1;
         while j<length(rad)
@@ -396,7 +432,7 @@ if bool_pre_training
     end
     % batchtrain avec trainlen ...
     if (~bool_rad && bool_trainlen)
-        fprintf(1,'\n-- BATCHTRAIN initial avec trainlen ... ')
+        if tracking > 0, fprintf(1,'\n-- BATCHTRAIN initial avec trainlen ... '); end
         if pretrain_tracking, fprintf(1,'\n'); end
         j=1;
         while j<=length(trlen)
@@ -410,7 +446,7 @@ if bool_pre_training
     end
     % batchtrain avec radius et trainlen
     if (bool_rad && bool_trainlen)
-        fprintf(1,'\n-- BATCHTRAIN initial avec radius et trainlen ... \n')
+        if tracking > 0, fprintf(1,'\n-- BATCHTRAIN initial avec radius et trainlen ... \n'); end
         if pretrain_tracking, fprintf(1,'\n'); end
         if length(rad)==length(trlen)+1
             
@@ -431,8 +467,9 @@ if bool_pre_training
     sMapPT = sMap;
     
     current_perf = som_distortion(sMap,sD_norm);
-    fprintf(1,'--> som_distortion apres entrainement initiale = %s\n', num2str(current_perf));
-    
+    if tracking > 0,
+        fprintf(1,'--> som_distortion apres entrainement initiale = %s\n', num2str(current_perf));
+    end
 else
     fprintf(1,'** batchtrain initial (pre-training) non active **\n')
 end
@@ -494,19 +531,22 @@ if (bool_2ssom)
         n_train = n_lambda*n_eta;
         
         if ~bool_rad_2s_som
-            rad_2s_som =  [rad(round(length(rad)/2)) ...
-                rad((round(length(rad)/2))+1)];
+            % if not specified, we take the two last values of 'rad', specified for som pre-training
+            %rad_2s_som =  [rad(round(length(rad)/2)) rad((round(length(rad)/2))+1)];
+            rad_2s_som =  rad(length(rad)-1:end);
         end
         if ~bool_trlen_2s_som
-            trlen_2s_som = trlen(round(length(trlen)/2));
+            % if not specified, we take the last value of 'trlen', specified for som pre-training
+            %trlen_2s_som = trlen(round(length(trlen)/2));
+            trlen_2s_som = trlen(end);
         end
-        fprintf(1,'   - rad_2s_som .... [%s]\n',join(string(rad_2s_som),', '));
-        fprintf(1,'   - trlen_2s_som .. [%s]\n',join(string(trlen_2s_som),', '));
         
-        fprintf(1,[ '\n-- batchtrainRTOM loop for %d lambda and %d eta values:\n', ...
-            '-- ------------------------------------------------------------------\n' ], ...
-            n_lambda, n_eta);
-        if tracking > 1,
+        if tracking == 0,
+            fprintf(1,'\n%s: batchtrainRTOM loop: %d lambda, %d eta values:\n', mfilename, n_lambda, n_eta);
+        else
+            fprintf(1,[ '\n-- %s: batchtrainRTOM loop for %d lambda and %d eta values:\n', ...
+                '-- ------------------------------------------------------------------\n' ], ...
+                mfilename, n_lambda, n_eta);
             fprintf(1,'   ... trainlen_2s_som ... %s\n', num2str(trlen_2s_som))
             fprintf(1,'   ... radius_2s_som ..... [%s]\n', join(string(rad_2s_som),', '))
         end
@@ -516,17 +556,22 @@ if (bool_2ssom)
         else
             parcomp_M = 1;
         end
+        
+        % parallel loop
         parfor (i=1:n_lambda,parcomp_M)
-        %for i = 1:n_lambda
+            %for i = 1:n_lambda  % uncoment for no parallel loop (and comment previous line)
             ResultIJ = struct([]);
             for j = 1:n_eta
-                fprintf(1,[ '-- batchtrainRTOM (%d/%d) %d train iterations', ...
-                    ' [R: %s], with lambda=%s and eta=%s ... ' ], ...
-                    (i - 1) * n_eta + j, n_train, trlen_2s_som, ...
-                    join(string(rad_2s_som),'-'), ...
-                    num2str(lambda(i)), num2str(eta(j)));
+                if tracking > 0,
+                    fprintf(1,[ '-- batchtrainRTOM (%d/%d) %s train iterations', ...
+                        ' [R: %s], with lambda=%s and eta=%s ... ' ], ...
+                        (i - 1) * n_eta + j, n_train, join(string(trlen_2s_som),', '), ...
+                        join(string(rad_2s_som),'-'), ...
+                        num2str(lambda(i)), num2str(eta(j)));
+                end
                 if tracking, fprintf(1,'\n'); end
                 
+                %if false % PAS de 2S-SOM forcé !!!
                 [ResultIJ(1).sMap, ResultIJ(1).bmus, ResultIJ(1).Alpha, ResultIJ(1).Beta] = som_batchtrainRTOM( ...
                     sMap, sD_norm, ...
                     'TypeAlgo', '2SSOM', ...
@@ -537,13 +582,26 @@ if (bool_2ssom)
                     'radius',   rad_2s_som, ...
                     'trainlen', trlen_2s_som, ...
                     'tracking', tracking);
-                
+                % else
+                %     ResultIJ(1).sMap = sMap;
+                %     ResultIJ(1).bmus = som_bmus(sMap, sD_norm);
+                %     ResultIJ(1).Alpha = [];
+                %     ResultIJ(1).Beta = [];
+                % end
                 ResultIJ(1).lambda  = lambda(i);
                 ResultIJ(1).eta     = eta(j);
                 ResultIJ(1).DimData = DimData;
                 
                 current_perf = som_distortion(ResultIJ(1).sMap,sD_norm);
-                fprintf(1,'   --> som_distortion=%s\n', num2str(current_perf));
+                if tracking == 0,
+                    fprintf(1,[ '-- batchtrainRTOM (%d/%d) %s train iterations', ...
+                        ' [R: %s], with lambda=%s and eta=%s  -->  som_distortion=%s\n' ], ...
+                        (i - 1) * n_eta + j, n_train, join(string(trlen_2s_som),', '), ...
+                        join(string(rad_2s_som),'-'), ...
+                        num2str(lambda(i)), num2str(eta(j)), num2str(current_perf));
+                elseif tracking > 0,
+                    fprintf(1,'   --> som_distortion=%s\n', num2str(current_perf));
+                end
                 
                 ResultIJ(1).Perf = current_perf;
                 
@@ -631,6 +689,7 @@ if bool_return_struct
     if (bool_2ssom)
         St.lambda  = Result(iBest).lambda;
         St.eta     = Result(iBest).eta;
+        St.Perf    = Result(iBest).Perf;
         St.bmus    = Result(iBest).bmus;
         St.Alpha   = Result(iBest).Alpha;
         St.Beta    = Result(iBest).Beta;

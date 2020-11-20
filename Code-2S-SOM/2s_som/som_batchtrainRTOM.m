@@ -304,7 +304,12 @@ function [sMap, bmus, Alpha_ck, Beta, sTrain, qe, Psi_ck] = som_batchtrainRTOM(s
         case 'shape',      i=i+1; sTopol.shape = varargin{i};
         case 'mask',       i=i+1; sTrain.mask = varargin{i};
         case 'neigh',      i=i+1; sTrain.neigh = varargin{i};
-        case 'trainlen',   i=i+1; sTrain.trainlen = varargin{i};
+        case 'trainlen',
+            i=i+1;
+            if ~isscalar(varargin{i}),
+                error('unexpected vector trainlen [%s], must be a scalar',join(string(varargin{i}),', '))
+            end
+            sTrain.trainlen = varargin{i};
         case 'tracking',   i=i+1; tracking = varargin{i};
         case 'weights',    i=i+1; weights = varargin{i};
         case 'radius_ini', i=i+1; sTrain.radius_ini = varargin{i};
@@ -335,7 +340,7 @@ function [sMap, bmus, Alpha_ck, Beta, sTrain, qe, Psi_ck] = som_batchtrainRTOM(s
         otherwise
           argok=0;
       end
-    elseif isstruct(varargin{i}) & isfield(varargin{i},'type'),
+    elseif isstruct(varargin{i}) && isfield(varargin{i},'type'),
       switch varargin{i}(1).type,
         case 'som_topol',
           sTopol = varargin{i};
@@ -356,13 +361,16 @@ function [sMap, bmus, Alpha_ck, Beta, sTrain, qe, Psi_ck] = som_batchtrainRTOM(s
 
   % take only weights of non-empty vectors
   if length(weights)>dlen, weights = weights(nonempty); end
-  % trainlen
-  if ~isempty(radius), sTrain.trainlen = length(radius); end
+  
+  % trainlen (if it's not declared with 'trainlen' input argument
+  if ~isempty(radius) && isnan(sTrain.trainlen),
+      sTrain.trainlen = length(radius);
+  end
 
   % check topology
   if struct_mode,
-    if ~strcmp(sTopol.lattice,sMap.topol.lattice) | ...
-          ~strcmp(sTopol.shape,sMap.topol.shape) | ...
+    if ~strcmp(sTopol.lattice,sMap.topol.lattice) || ...
+          ~strcmp(sTopol.shape,sMap.topol.shape) || ...
           any(sTopol.msize ~= sMap.topol.msize),
       warning('Changing the original map topology.');
     end
@@ -500,6 +508,10 @@ function [sMap, bmus, Alpha_ck, Beta, sTrain, qe, Psi_ck] = som_batchtrainRTOM(s
         end
       end
     case '2SSOM',
+      if tracking > 0,
+          fprintf(1,'2SSOM: lambda: %s, eta: %s\n\n', num2str(lambda),length(eta))
+      end
+
       % pr? traitement : creation des diff?retentes blocs de variables
       dconst = ((D.^2)*mask)';
       deb = 1; BlocData = struct; % structure contenant les blocs de donn?es
@@ -541,12 +553,12 @@ function [sMap, bmus, Alpha_ck, Beta, sTrain, qe, Psi_ck] = som_batchtrainRTOM(s
       H = diag(ones(1,blen));
 
       %% Apprentissage
-      if tracking>1,
+      if tracking > 0,
         fprintf(1,' ... tlen=%s with %d radius values varying from %s to %s\n', ...
                 num2str(trainlen),length(radius),num2str(radius(1)),num2str(radius(end)));
       end
       for t = 1:trainlen,
-        if tracking>1, fprintf(1,' ... rad=%s           ',num2str(radius(t))); end
+        if tracking > 0, fprintf(1,' ... rad=%s           ',num2str(radius(t))); end
         % t=1 initialisation
         if t==1,
           %% Affectation des observations aux cellules
