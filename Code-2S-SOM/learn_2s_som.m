@@ -379,12 +379,13 @@ else
     fprintf(1,' <som init END>.\n')
 end
 if tracking > 0,
-    fprintf(1,'\n-- sMap:\n');
-    fprintf(1,'   - msize ......... [%s]\n',join(string(sMap.topol.msize),', '));
-    fprintf(1,'   - lattice ....... ''%s''\n',sMap.topol.lattice);
-    fprintf(1,'-- Training data:\n')
-    fprintf(1,'   - radius ........ [%s]\n',join(string(rad),', '));
-    fprintf(1,'   - trainlen ...... [%s]\n',join(string(trlen),', '));
+    fprintf(1,'\n-- Initialisation finished. Current map: ');
+    fprintf(1,'\n   -- sMap:\n');
+    fprintf(1,'      - msize ......... [%s]\n',join(string(sMap.topol.msize),', '));
+    fprintf(1,'      - lattice ....... ''%s''\n',sMap.topol.lattice);
+    fprintf(1,'   -- Training data:\n')
+    fprintf(1,'      - radius ........ [%s]\n',join(string(rad),', '));
+    fprintf(1,'      - trainlen ...... [%s]\n',join(string(trlen),', '));
 end
 % bool_rad=0;
 % bool_trainlen=0;
@@ -422,10 +423,19 @@ if bool_pre_training
         if pretrain_tracking, fprintf(1,'\n'); end
         j=1;
         while j<length(rad)
-            
+            if tracking>0,
+                fprintf('radius: %s to  %s\n',num2str(rad(j)), num2str(rad(j+1)))
+            end
             sMap=som_batchtrain(sMap, sD_norm, ...
                 'radius',[rad(j) rad(j+1)], ...
                 'tracking',pretrain_tracking);
+            % quality
+            if tracking>1,
+                [mqe,tge,cbe] = som_quality(sMap,sD_norm);
+                fprintf('\nFinal pre-train loop(%d) quantization error: %5.3f\n',j,mqe)
+                fprintf('Final pre-train loop topographic error:  %5.3f\n',tge)
+                fprintf('Final pre-train loop combined error:  %5.3f\n',cbe)
+            end
             j=j+1;
             
         end
@@ -437,9 +447,19 @@ if bool_pre_training
         j=1;
         while j<=length(trlen)
             
+            if tracking>0,
+                fprintf('trainlen: %s\n',num2str(trlen(j)))
+            end
             sMap=som_batchtrain(sMap, sD_norm, ...
                 'trainlen',trlen(j), ...
                 'tracking',pretrain_tracking);
+            % quality
+            if tracking>1,
+                [mqe,tge,cbe] = som_quality(sMap,sD_norm);
+                fprintf('\nFinal pre-train loop(%d) quantization error: %5.3f\n',j,mqe)
+                fprintf('Final pre-train loop topographic error:  %5.3f\n',tge)
+                fprintf('Final pre-train loop combined error:  %5.3f\n',cbe)
+            end
             j=j+1;
             
         end
@@ -453,10 +473,21 @@ if bool_pre_training
             j=1;
             while j<length(rad)
                 
+            if tracking>0,
+                fprintf('trainlen: %s',num2str(trlen(j)))
+                fprintf(' and radius: %s to  %s\n',num2str(rad(j)), num2str(rad(j+1)))
+            end
                 sMap=som_batchtrain(sMap, sD_norm, ...
                     'radius',[rad(j) rad(j+1)], ...
                     'trainlen',trlen(j), ...
                     'tracking',pretrain_tracking);
+                % quality
+                if tracking>1,
+                    [mqe,tge,cbe] = som_quality(sMap,sD_norm);
+                    fprintf('\nFinal pre-train loop(%d) quantization error: %5.3f\n',j,mqe)
+                    fprintf('Final pre-train loop topographic error:  %5.3f\n',tge)
+                    fprintf('Final pre-train loop combined error:  %5.3f\n',cbe)
+                end
                 j=j+1;
                 
             end
@@ -542,7 +573,7 @@ if (bool_2ssom)
         end
         
         if tracking == 0,
-            fprintf(1,'\n%s: batchtrainRTOM loop: %d lambda, %d eta values:\n', mfilename, n_lambda, n_eta);
+            fprintf(1,'\n%s: batchtrainRTOM loop: %d lambda and %d eta values:\n', mfilename, n_lambda, n_eta);
         else
             fprintf(1,[ '\n-- %s: batchtrainRTOM loop for %d lambda and %d eta values:\n', ...
                 '-- ------------------------------------------------------------------\n' ], ...
@@ -571,7 +602,7 @@ if (bool_2ssom)
                 end
                 if tracking, fprintf(1,'\n'); end
                 
-                %if false % PAS de 2S-SOM forcé !!!
+                %if false % PAS de 2S-SOM forcï¿½ !!!
                 [ResultIJ(1).sMap, ResultIJ(1).bmus, ResultIJ(1).Alpha, ResultIJ(1).Beta] = som_batchtrainRTOM( ...
                     sMap, sD_norm, ...
                     'TypeAlgo', '2SSOM', ...
@@ -601,6 +632,13 @@ if (bool_2ssom)
                         num2str(lambda(i)), num2str(eta(j)), num2str(current_perf));
                 elseif tracking > 0,
                     fprintf(1,'   --> som_distortion=%s\n', num2str(current_perf));
+                    % quality
+                    if tracking > 1,
+                        [mqe,tge,cbe] = som_quality(ResultIJ(1).sMap,sD_norm);
+                        fprintf('\nCurrent 2S-SOM process loop(%d,%d) quantization error: %5.3f\n',i,j,mqe)
+                        fprintf('Current 2S-SOM process topographic error:  %5.3f\n',tge)
+                        fprintf('Current 2S-SOM process combined error:  %5.3f\n',cbe)
+                    end
                 end
                 
                 ResultIJ(1).Perf = current_perf;
@@ -663,6 +701,14 @@ if (bool_2ssom)
 else
     % sinon, si pas 2S-SOM
     sMap = sMapPT;
+end
+
+% quality
+if tracking == 1,
+    [mqe,tge,cbe] = som_quality(sMap,sD_norm);
+    fprintf('\nFinal quantization error: %5.3f\n',mqe)
+    fprintf('Final topographic error:  %5.3f\n',tge)
+    fprintf('Final combined error:  %5.3f\n',cbe)
 end
 
 % denormalisation de la Map
