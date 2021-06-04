@@ -86,8 +86,8 @@ function [StsMap sMap_denorm Resultout sMapPTout] = learn_2s_som(A,nb_neurons,va
 %
 %    'norm', Value, ...
 %             String. If 'norm' is present, a flag is activated to normalize
-%             data. The argument Value is 'simple' by default. See SOM_NORMALIZE
-%             for mor explanations.
+%             data. The argument Value is 'none' by default, meaning no normalisation at all.
+%             See SOM_NORMALIZE for mor explanations.
 %
 %    'init', Value, ...
 %    'lattice', Value, ...
@@ -145,7 +145,7 @@ lattice        = 'rect';
 % flags et variables associees
 bool_verbose        = false;
 bool_return_struct  = false;
-bool_norm           = false; type_norm     = 'simple';
+bool_norm           = false; type_norm     = 'none';
 bool_rad            = false; rad           = [5 1];
 bool_trainlen       = false; trlen         = 20;
 bool_rad_2s_som     = false; rad_2s_som    = [];
@@ -294,11 +294,23 @@ sD = som_data_struct(data.data,'name', data_casename,'comp_names', upper(ListVar
 % end
 
 %normalisation des donnees
-if bool_norm
-    if tracking > 0,
-        fprintf(1,'\n-- Normalisation des donnees selon ''%s'' ...\n', type_norm);
+if bool_norm && isstr(type_norm) && strcmp(type_norm,'none')
+    if tracking > 0
+        fprintf(1,'\n** Normalisation type ''%s'': pas de normalisation des donnees **\n', type_norm);
     end
-    if strcmp(type_norm,'simple')
+    bool_norm = false;
+end
+if bool_norm
+    if tracking > 0
+        if isstruct(type_norm) && isfield(type_norm,'type')
+            fprintf(1,'\n-- Normalisation des donnees selon structure type ''%s'' ...\n', type_norm.type);
+        elseif isstr(type_norm)
+            fprintf(1,'\n-- Normalisation des donnees selon ''%s'' ...\n', type_norm);
+        else
+            fprintf(1,'\n-- Normalisation des donnees selon data de type non connu ...\n');
+        end
+    end
+    if isstr(type_norm) && strcmp(type_norm,'simple')
         sD_norm=som_normalize(sD);
     else
         sD_norm=som_normalize(sD,type_norm);
